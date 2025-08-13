@@ -3,13 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, Lock } from "lucide-react";
+import { Shield, Lock, X } from "lucide-react";
 
 interface PasswordPromptProps {
   onAuthenticate: () => void;
+  onCancel?: () => void;
 }
 
-export function PasswordPrompt({ onAuthenticate }: PasswordPromptProps) {
+export function PasswordPrompt({ onAuthenticate, onCancel }: PasswordPromptProps) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
@@ -27,7 +28,18 @@ export function PasswordPrompt({ onAuthenticate }: PasswordPromptProps) {
   return (
     <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
       <Card className="w-full max-w-md bg-card border-border shadow-lg">
-        <CardHeader className="text-center">
+        <CardHeader className="text-center relative">
+          {onCancel && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onCancel}
+              className="absolute top-2 right-2 text-text-muted hover:text-text-primary"
+              data-testid="button-close-password-prompt"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
           <div className="w-16 h-16 bg-aesa-blue rounded-full flex items-center justify-center mx-auto mb-4">
             <Shield className="text-white h-8 w-8" />
           </div>

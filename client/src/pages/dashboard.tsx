@@ -11,14 +11,28 @@ import { Shield, Plus, Package, Settings, Clock } from "lucide-react";
 export default function Dashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState("request");
+  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+  const [pendingTab, setPendingTab] = useState<string | null>(null);
 
   const handleAuthenticate = () => {
     setIsAuthenticated(true);
+    setShowPasswordPrompt(false);
+    if (pendingTab) {
+      setActiveTab(pendingTab);
+      setPendingTab(null);
+    }
+  };
+
+  const handleCancelAuth = () => {
+    setShowPasswordPrompt(false);
+    setPendingTab(null);
   };
 
   const handleTabChange = (value: string) => {
     if (value !== "request" && !isAuthenticated) {
-      // Don't change tab if trying to access protected content without auth
+      // Show password prompt for protected tabs
+      setPendingTab(value);
+      setShowPasswordPrompt(true);
       return;
     }
     setActiveTab(value);
@@ -31,8 +45,8 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Password Prompt Overlay */}
-      {activeTab !== "request" && !isAuthenticated && (
-        <PasswordPrompt onAuthenticate={handleAuthenticate} />
+      {showPasswordPrompt && (
+        <PasswordPrompt onAuthenticate={handleAuthenticate} onCancel={handleCancelAuth} />
       )}
 
       {/* Header */}
@@ -78,11 +92,8 @@ export default function Dashboard() {
             </TabsTrigger>
             <TabsTrigger 
               value="inventory" 
-              className={`flex items-center space-x-2 data-[state=active]:bg-background data-[state=active]:text-aesa-accent ${
-                isProtectedTab("inventory") ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className="flex items-center space-x-2 data-[state=active]:bg-background data-[state=active]:text-aesa-accent"
               data-testid="tab-inventory"
-              disabled={isProtectedTab("inventory")}
             >
               <Package className="h-4 w-4" />
               <span className="hidden sm:inline">Inventory Tracking</span>
@@ -90,11 +101,8 @@ export default function Dashboard() {
             </TabsTrigger>
             <TabsTrigger 
               value="admin" 
-              className={`flex items-center space-x-2 data-[state=active]:bg-background data-[state=active]:text-aesa-accent ${
-                isProtectedTab("admin") ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className="flex items-center space-x-2 data-[state=active]:bg-background data-[state=active]:text-aesa-accent"
               data-testid="tab-admin"
-              disabled={isProtectedTab("admin")}
             >
               <Settings className="h-4 w-4" />
               <span className="hidden sm:inline">Admin Panel</span>
@@ -102,11 +110,8 @@ export default function Dashboard() {
             </TabsTrigger>
             <TabsTrigger 
               value="pending" 
-              className={`flex items-center space-x-2 data-[state=active]:bg-background data-[state=active]:text-aesa-accent ${
-                isProtectedTab("pending") ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className="flex items-center space-x-2 data-[state=active]:bg-background data-[state=active]:text-aesa-accent"
               data-testid="tab-pending"
-              disabled={isProtectedTab("pending")}
             >
               <Clock className="h-4 w-4" />
               <span className="hidden sm:inline">Pending Requests</span>
