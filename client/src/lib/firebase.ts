@@ -1,14 +1,17 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps } from "firebase/app";
 import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDZXaf9PO6E69KNiv-yjtwFxGe8c6jyz3c",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "video-call-system-140da.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "video-call-system-140da",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "video-call-system-140da.appspot.com",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "818151254357",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:818151254357:web:00c81df2d11a9118ffe7dc"
+  apiKey: "AIzaSyA5cFQXNly1uVkZrJNfP7cKNiHdBd8dxHw",
+  authDomain: "leaderboard-62d73.firebaseapp.com",
+  databaseURL: "https://leaderboard-62d73-default-rtdb.firebaseio.com",
+  projectId: "leaderboard-62d73",
+  storageBucket: "leaderboard-62d73.firebasestorage.app",
+  messagingSenderId: "612954698449",
+  appId: "1:612954698449:web:bdbc99d3b353d297b7cbf0",
+  measurementId: "G-LEESBNKQQM"
 };
 
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase (avoid duplicate app error during hot reload)
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 export const database = getDatabase(app);
