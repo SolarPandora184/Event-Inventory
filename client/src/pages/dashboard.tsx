@@ -6,16 +6,19 @@ import { InventoryTable } from "@/components/inventory/inventory-table";
 import { AdminPanel } from "@/components/inventory/admin-panel";
 import { PendingRequests } from "@/components/inventory/pending-requests";
 import { PasswordPrompt } from "@/components/auth/password-prompt";
+import { CookieConsent } from "@/components/auth/cookie-consent";
+import { useAuth, useEventName } from "@/hooks/use-auth";
 import { Shield, Plus, Package, Settings, Clock } from "lucide-react";
 
 export default function Dashboard() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState("request");
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [pendingTab, setPendingTab] = useState<string | null>(null);
+  const { isAuthenticated, showCookieConsent, authenticate, acceptCookies, declineCookies } = useAuth();
+  const { eventName } = useEventName();
 
   const handleAuthenticate = () => {
-    setIsAuthenticated(true);
+    authenticate();
     setShowPasswordPrompt(false);
     if (pendingTab) {
       setActiveTab(pendingTab);
@@ -38,15 +41,16 @@ export default function Dashboard() {
     setActiveTab(value);
   };
 
-  const isProtectedTab = (tab: string) => {
-    return tab !== "request" && !isAuthenticated;
-  };
-
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Password Prompt Overlay */}
       {showPasswordPrompt && (
         <PasswordPrompt onAuthenticate={handleAuthenticate} onCancel={handleCancelAuth} />
+      )}
+
+      {/* Cookie Consent */}
+      {showCookieConsent && (
+        <CookieConsent onAccept={acceptCookies} onDecline={declineCookies} />
       )}
 
       {/* Header */}
@@ -59,7 +63,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-text-primary">AESA Squadron 72</h1>
-                <p className="text-sm text-text-muted">Inventory Management System</p>
+                <p className="text-sm text-text-muted">{eventName} Inventory Management System</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">

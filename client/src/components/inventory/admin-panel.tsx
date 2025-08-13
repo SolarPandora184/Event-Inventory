@@ -8,9 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { useEventName } from "@/hooks/use-auth";
 import { database } from "@/lib/firebase";
 import { ref, push, set, remove } from "firebase/database";
-import { Settings, Plus, Trash, AlertTriangle } from "lucide-react";
+import { Settings, Plus, Trash, AlertTriangle, Save, Calendar } from "lucide-react";
 import type { InventoryItem } from "@/types/inventory";
 
 const adminSchema = z.object({
@@ -29,7 +30,9 @@ type AdminFormData = z.infer<typeof adminSchema>;
 export function AdminPanel() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const [tempEventName, setTempEventName] = useState("");
   const { toast } = useToast();
+  const { eventName, updateEventName } = useEventName();
 
   const form = useForm<AdminFormData>({
     resolver: zodResolver(adminSchema),
@@ -108,8 +111,64 @@ export function AdminPanel() {
     }
   };
 
+  const saveEventName = () => {
+    if (!tempEventName.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter an event name.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateEventName(tempEventName.trim());
+    setTempEventName("");
+    toast({
+      title: "Event Name Updated",
+      description: `Event name has been changed to "${tempEventName.trim()}".`,
+    });
+  };
+
   return (
     <div className="space-y-6">
+      {/* Event Name Configuration */}
+      <Card className="bg-card border-border" data-testid="event-config-card">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold text-text-primary flex items-center">
+            <Calendar className="mr-2 h-5 w-5" />
+            Event Configuration
+          </CardTitle>
+          <CardDescription className="text-text-secondary">
+            Set the current event name for the inventory system
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <Label htmlFor="event-name" className="text-sm font-medium text-text-primary">
+                Current Event: <span className="text-aesa-accent font-semibold">{eventName}</span>
+              </Label>
+              <Input
+                id="event-name"
+                value={tempEventName}
+                onChange={(e) => setTempEventName(e.target.value)}
+                data-testid="input-event-name"
+                className="mt-2 bg-input border-border text-text-primary placeholder:text-text-muted"
+                placeholder="Enter new event name"
+              />
+            </div>
+            <Button
+              onClick={saveEventName}
+              data-testid="button-save-event-name"
+              className="bg-aesa-blue hover:bg-aesa-accent text-white mt-6"
+            >
+              <Save className="mr-2 h-4 w-4" />
+              Save Event Name
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="bg-card border-border" data-testid="admin-panel-card">
         <CardHeader>
           <div className="flex items-center justify-between">
