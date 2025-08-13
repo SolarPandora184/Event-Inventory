@@ -61,13 +61,35 @@ If you need to rebuild the static files:
 - All asset paths use relative URLs (`./assets/`) for GitHub Pages compatibility
 - The app will work offline once loaded since it's a static build
 
+## What The Error "Did you forget to add the page to the router" Means
+
+This error message appears when:
+1. You're trying to access a direct URL (like `/admin` or `/inventory`) on GitHub Pages
+2. GitHub Pages serves the 404.html file instead of letting React handle the routing
+3. The app shows the "404 Page Not Found" component from the NotFound page
+
+This is **normal behavior** that gets fixed once you deploy to GitHub Pages with the proper routing setup.
+
+## How The Fix Works
+
+The setup includes:
+1. **404.html** - Automatically redirects failed routes back to the main app
+2. **Route handling in main.tsx** - Restores the original URL after redirect
+3. **Relative asset paths** - Ensures CSS and JavaScript load properly
+
 ## Troubleshooting
 
-If you see 404 errors:
+If you see "Did you forget to add the page to the router":
+1. This is expected when testing locally with direct URL access
+2. The error will disappear once deployed to GitHub Pages
+3. Make sure you push both `index.html` and `404.html` to your repository
+
+If you see 404 errors on GitHub Pages:
 1. Ensure all files are in the repository root
 2. Check that GitHub Pages is enabled and pointing to the main branch
 3. Verify asset paths are relative (start with `./`)
 
-If routing doesn't work:
-1. Ensure 404.html exists and matches index.html
-2. Check that the SPA routing script is included in 404.html
+If routing doesn't work after deployment:
+1. Ensure 404.html exists and has the redirect script
+2. Check that the GitHub Pages URL is using HTTPS
+3. Wait a few minutes for GitHub Pages to update after pushing changes
