@@ -62,8 +62,8 @@ export default function Dashboard() {
                 <Shield className="text-white h-6 w-6" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-text-primary">AESA Squadron 72</h1>
-                <p className="text-sm text-text-muted">{eventName} Inventory Management System</p>
+                <h1 className="text-xl font-bold text-text-primary">{eventName}</h1>
+                <p className="text-sm text-text-muted">Inventory Management System</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
