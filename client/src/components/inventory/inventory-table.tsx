@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { database } from "@/lib/firebase";
 import { ref, onValue, update, remove } from "firebase/database";
@@ -34,11 +36,18 @@ const filterButtons: FilterButton[] = [
   { status: 'verified', label: 'Verified', icon: <Shield className="mr-2 h-4 w-4" />, color: 'border-status-verified text-status-verified hover:bg-status-verified' },
 ];
 
+const specialFilters = [
+  { key: 'has-missing', label: 'Has Missing Items', icon: <Minus className="mr-2 h-4 w-4" />, color: 'border-amber-500 text-amber-500 hover:bg-amber-500' },
+];
+
 export function InventoryTable() {
   const [items, setItems] = useState<Record<string, InventoryItem>>({});
   const [currentFilter, setCurrentFilter] = useState<ItemStatus | null>(null);
+  const [specialFilter, setSpecialFilter] = useState<string | null>(null);
   const [receivedQuantities, setReceivedQuantities] = useState<Record<string, number>>({});
   const [missingQuantities, setMissingQuantities] = useState<Record<string, number>>({});
+  const [missingDialogOpen, setMissingDialogOpen] = useState<Record<string, boolean>>({});
+  const [returnedAmount, setReturnedAmount] = useState<Record<string, number>>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -59,12 +68,21 @@ export function InventoryTable() {
   };
 
   const filteredItems = Object.entries(items).filter(([_, item]) => {
+    if (specialFilter === 'has-missing') {
+      return (item.missing || 0) > 0;
+    }
     if (!currentFilter) return true;
     return getItemStatus(item) === currentFilter;
   });
 
   const handleFilterClick = (status: ItemStatus) => {
     setCurrentFilter(currentFilter === status ? null : status);
+    setSpecialFilter(null);
+  };
+
+  const handleSpecialFilterClick = (filterKey: string) => {
+    setSpecialFilter(specialFilter === filterKey ? null : filterKey);
+    setCurrentFilter(null);
   };
 
   const confirmReceived = async (key: string) => {
@@ -126,23 +144,33 @@ export function InventoryTable() {
     }
   };
 
-  const confirmMissing = async (key: string) => {
-    const quantity = missingQuantities[key];
-    if (quantity === undefined || quantity < 0) {
+  const handleMissingSubmit = async (key: string) => {
+    const item = items[key];
+    const returned = returnedAmount[key] || 0;
+    
+    if (returned < 0 || returned > item.requested) {
       toast({
-        title: "Invalid Quantity",
-        description: "Please enter a valid missing quantity.",
+        title: "Invalid Amount",
+        description: `Amount returned must be between 0 and ${item.requested}.`,
         variant: "destructive",
       });
       return;
     }
 
+    const missing = item.requested - returned;
+
     try {
-      await update(ref(database, `inventory/${key}`), { missing: quantity });
-      setMissingQuantities(prev => ({ ...prev, [key]: 0 }));
+      await update(ref(database, `inventory/${key}`), { 
+        missing: missing,
+        received: returned 
+      });
+      
+      setReturnedAmount(prev => ({ ...prev, [key]: 0 }));
+      setMissingDialogOpen(prev => ({ ...prev, [key]: false }));
+      
       toast({
         title: "Updated",
-        description: "Missing quantity updated successfully.",
+        description: `Missing quantity set to ${missing}. Received updated to ${returned}.`,
       });
     } catch (error) {
       toast({
@@ -293,29 +321,66 @@ export function InventoryTable() {
             <Undo2 className="mr-1 h-4 w-4" />
             Mark Returned
           </Button>
-          <div className="flex items-center gap-1">
-            <Input
-              type="number"
-              min="0"
-              placeholder="Missing"
-              value={missingQuantities[key] || ''}
-              onChange={(e) => setMissingQuantities(prev => ({ 
-                ...prev, 
-                [key]: parseInt(e.target.value) || 0 
-              }))}
-              data-testid={`input-missing-${key}`}
-              className="w-20 h-8 bg-input border-border text-text-primary"
-            />
-            <Button
-              size="sm"
-              onClick={() => confirmMissing(key)}
-              data-testid={`button-mark-missing-${key}`}
-              className="bg-status-missing hover:bg-opacity-80 text-white"
-            >
-              <Minus className="mr-1 h-4 w-4" />
-              Missing
-            </Button>
-          </div>
+          <Dialog open={missingDialogOpen[key] || false} onOpenChange={(open) => setMissingDialogOpen(prev => ({ ...prev, [key]: open }))}>
+            <DialogTrigger asChild>
+              <Button
+                size="sm"
+                data-testid={`button-mark-missing-${key}`}
+                className="bg-status-missing hover:bg-opacity-80 text-white"
+              >
+                <Minus className="mr-1 h-4 w-4" />
+                Missing
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-card border-border">
+              <DialogHeader>
+                <DialogTitle className="text-text-primary">Record Missing Items</DialogTitle>
+                <DialogDescription className="text-text-secondary">
+                  Enter how much was actually returned for <strong>{item.itemName}</strong>.
+                  <br />
+                  Requested: {item.requested} | Current Missing: {item.missing || 0}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor={`returned-${key}`} className="text-right text-text-primary">
+                    Amount Returned:
+                  </Label>
+                  <Input
+                    id={`returned-${key}`}
+                    type="number"
+                    min="0"
+                    max={item.requested}
+                    value={returnedAmount[key] || ''}
+                    onChange={(e) => setReturnedAmount(prev => ({ 
+                      ...prev, 
+                      [key]: parseInt(e.target.value) || 0 
+                    }))}
+                    className="col-span-3 bg-input border-border text-text-primary"
+                    placeholder={`0 - ${item.requested}`}
+                  />
+                </div>
+                <div className="text-sm text-text-muted">
+                  Missing will be calculated as: {item.requested} - {returnedAmount[key] || 0} = {item.requested - (returnedAmount[key] || 0)}
+                </div>
+              </div>
+              <DialogFooter>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setMissingDialogOpen(prev => ({ ...prev, [key]: false }))}
+                  className="border-border text-text-secondary"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={() => handleMissingSubmit(key)}
+                  className="bg-status-missing hover:bg-opacity-80 text-white"
+                >
+                  Update Missing
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       );
     } else if (status === 'complete') {
@@ -409,6 +474,21 @@ export function InventoryTable() {
                 data-testid={`button-filter-${filter.status}`}
                 className={`${filter.color} hover:text-white transition-colors ${
                   currentFilter === filter.status ? 'bg-current text-white' : ''
+                }`}
+              >
+                {filter.icon}
+                {filter.label}
+              </Button>
+            ))}
+            {specialFilters.map((filter) => (
+              <Button
+                key={filter.key}
+                variant="outline"
+                size="sm"
+                onClick={() => handleSpecialFilterClick(filter.key)}
+                data-testid={`button-filter-${filter.key}`}
+                className={`${filter.color} hover:text-white transition-colors ${
+                  specialFilter === filter.key ? 'bg-current text-white' : ''
                 }`}
               >
                 {filter.icon}
