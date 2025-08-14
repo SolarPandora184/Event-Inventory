@@ -1,10 +1,8 @@
 import streamlit as st
 import pandas as pd
-import os
-from datetime import datetime
 import json
-from typing import Optional, Dict, List
-import sys
+from datetime import datetime
+from typing import Dict, List, Optional
 
 # Configure Streamlit page
 st.set_page_config(
@@ -14,513 +12,817 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for AESA Squadron theming - matches original React app
+# Exact CSS styling matching the React app
 st.markdown("""
 <style>
+    /* Import Inter font */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    /* Root variables matching the React app exactly */
+    :root {
+        --background: hsl(210, 15%, 6%);
+        --foreground: hsl(200, 7%, 92%);
+        --card: hsl(210, 15%, 9%);
+        --card-foreground: hsl(200, 7%, 92%);
+        --primary: hsl(203, 89%, 53%);
+        --secondary: hsl(210, 15%, 13%);
+        --border: hsl(210, 15%, 19%);
+        --input: hsl(210, 15%, 13%);
+        --aesa-blue: hsl(210, 70%, 25%);
+        --aesa-accent: hsl(200, 60%, 45%);
+        --text-primary: hsl(200, 7%, 92%);
+        --text-secondary: hsl(210, 7%, 58%);
+        --text-muted: hsl(210, 7%, 43%);
+        --status-missing: hsl(356, 91%, 54%);
+        --status-complete: hsl(159, 81%, 36%);
+        --status-verified: hsl(217, 71%, 53%);
+        --status-returned: hsl(185, 73%, 45%);
+    }
+    
     /* Main app styling */
     .stApp {
-        background-color: #0f172a;
-        color: #f8fafc;
+        background-color: hsl(210, 15%, 6%);
+        color: hsl(200, 7%, 92%);
+        font-family: 'Inter', system-ui, sans-serif;
     }
     
-    /* Header styling */
+    /* Header exactly matching React */
     .main-header {
-        background: linear-gradient(90deg, #1e293b, #334155);
-        padding: 1rem;
-        border-radius: 0.5rem;
+        background-color: hsl(210, 15%, 9%);
+        border: 1px solid hsl(210, 15%, 19%);
+        border-radius: 0.75rem;
         margin-bottom: 2rem;
-        color: white;
-        border: 1px solid #475569;
     }
     
-    /* Status badges matching original */
-    .status-missing { 
-        background-color: #fef2f2; 
-        color: #dc2626; 
-        padding: 0.25rem 0.75rem; 
-        border-radius: 0.375rem;
-        font-weight: 600;
-        font-size: 0.875rem;
-        display: inline-block;
+    /* Card styling exactly matching React */
+    .inventory-card {
+        background-color: hsl(210, 15%, 9%);
+        border: 1px solid hsl(210, 15%, 19%);
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
     }
-    .status-complete { 
-        background-color: #f0fdf4; 
-        color: #16a34a; 
-        padding: 0.25rem 0.75rem; 
+    
+    /* Status badges exactly matching React */
+    .status-missing {
+        color: hsl(356, 91%, 54%);
+        background-color: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        padding: 0.25rem 0.75rem;
         border-radius: 0.375rem;
-        font-weight: 600;
         font-size: 0.875rem;
-        display: inline-block;
-    }
-    .status-verified { 
-        background-color: #eff6ff; 
-        color: #2563eb; 
-        padding: 0.25rem 0.75rem; 
-        border-radius: 0.375rem;
-        font-weight: 600;
-        font-size: 0.875rem;
-        display: inline-block;
-    }
-    .status-returned { 
-        background-color: #faf5ff; 
-        color: #7c3aed; 
-        padding: 0.25rem 0.75rem; 
-        border-radius: 0.375rem;
-        font-weight: 600;
-        font-size: 0.875rem;
+        font-weight: 500;
         display: inline-block;
     }
     
-    /* Card styling */
-    .stContainer > div {
-        background-color: #1e293b;
-        border: 1px solid #334155;
-        border-radius: 0.5rem;
-        padding: 1rem;
-        margin: 0.5rem 0;
+    .status-complete {
+        color: hsl(159, 81%, 36%);
+        background-color: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        display: inline-block;
     }
     
-    /* Button styling */
+    .status-verified {
+        color: hsl(217, 71%, 53%);
+        background-color: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        display: inline-block;
+    }
+    
+    .status-returned {
+        color: hsl(185, 73%, 45%);
+        background-color: rgba(6, 182, 212, 0.1);
+        border: 1px solid rgba(6, 182, 212, 0.2);
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        display: inline-block;
+    }
+    
+    /* Table styling matching React */
+    .stDataFrame {
+        background-color: hsl(210, 15%, 9%);
+        border: 1px solid hsl(210, 15%, 19%);
+        border-radius: 0.75rem;
+    }
+    
+    .stDataFrame table {
+        color: hsl(200, 7%, 92%);
+    }
+    
+    /* Button styling matching React */
     .stButton > button {
-        background-color: #3b82f6;
+        background-color: hsl(210, 70%, 25%);
         color: white;
         border: none;
         border-radius: 0.375rem;
         font-weight: 500;
+        font-family: 'Inter', system-ui, sans-serif;
     }
     
     .stButton > button:hover {
-        background-color: #2563eb;
-    }
-    
-    /* Admin section */
-    .admin-section { 
-        border: 2px solid #3b82f6; 
-        padding: 1.5rem; 
-        border-radius: 0.5rem; 
-        background-color: #1e293b;
-        margin: 1rem 0;
-    }
-    
-    /* Survey button */
-    .survey-button {
-        background-color: #059669 !important;
-        color: white !important;
-        font-weight: 600 !important;
-        padding: 0.75rem 1.5rem !important;
-        border-radius: 0.375rem !important;
-    }
-    
-    /* Footer styling */
-    .footer {
-        border-top: 1px solid #334155;
-        background-color: #1e293b;
-        padding: 1rem;
-        margin-top: 3rem;
-        text-align: center;
-        color: #94a3b8;
-        font-size: 0.75rem;
-    }
-    
-    /* Table styling */
-    .stDataFrame {
-        background-color: #1e293b;
+        background-color: hsl(200, 60%, 45%);
     }
     
     /* Tab styling */
     .stTabs [data-baseweb="tab-list"] {
-        background-color: #334155;
-        border-radius: 0.5rem;
+        background-color: hsl(210, 15%, 13%);
+        border-radius: 0.75rem;
+        border: 1px solid hsl(210, 15%, 19%);
     }
     
     .stTabs [data-baseweb="tab"] {
-        color: #94a3b8;
+        color: hsl(210, 7%, 58%);
         background-color: transparent;
     }
     
     .stTabs [aria-selected="true"] {
-        background-color: #1e293b;
-        color: #3b82f6;
+        background-color: hsl(210, 15%, 9%);
+        color: hsl(203, 89%, 53%);
+    }
+    
+    /* Input styling matching React */
+    .stTextInput > div > div > input,
+    .stNumberInput > div > div > input,
+    .stSelectbox > div > div > div,
+    .stTextArea > div > div > textarea {
+        background-color: hsl(210, 15%, 13%);
+        border: 1px solid hsl(210, 15%, 19%);
+        color: hsl(200, 7%, 92%);
+        border-radius: 0.375rem;
+    }
+    
+    /* Filter button styling */
+    .filter-button {
+        border: 1px solid;
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin: 0.25rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .filter-missing {
+        border-color: hsl(356, 91%, 54%);
+        color: hsl(356, 91%, 54%);
+    }
+    
+    .filter-missing:hover,
+    .filter-missing.active {
+        background-color: hsl(356, 91%, 54%);
+        color: white;
+    }
+    
+    .filter-received {
+        border-color: hsl(159, 81%, 36%);
+        color: hsl(159, 81%, 36%);
+    }
+    
+    .filter-received:hover,
+    .filter-received.active {
+        background-color: hsl(159, 81%, 36%);
+        color: white;
+    }
+    
+    .filter-assigned {
+        border-color: hsl(217, 71%, 53%);
+        color: hsl(217, 71%, 53%);
+    }
+    
+    .filter-assigned:hover,
+    .filter-assigned.active {
+        background-color: hsl(217, 71%, 53%);
+        color: white;
+    }
+    
+    .filter-returned {
+        border-color: hsl(185, 73%, 45%);
+        color: hsl(185, 73%, 45%);
+    }
+    
+    .filter-returned:hover,
+    .filter-returned.active {
+        background-color: hsl(185, 73%, 45%);
+        color: white;
+    }
+    
+    /* Card title styling */
+    .card-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: hsl(200, 7%, 92%);
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .card-description {
+        color: hsl(210, 7%, 58%);
+        font-size: 0.875rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Footer styling */
+    .footer {
+        border-top: 1px solid hsl(210, 15%, 19%);
+        background-color: hsl(210, 15%, 9%);
+        padding: 1rem;
+        margin-top: 3rem;
+        text-align: center;
+        color: hsl(210, 7%, 43%);
+        font-size: 0.75rem;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Initialize session state
-# Initialize session state - matching original React app state
+# Initialize session state matching React app exactly
+if "inventory_items" not in st.session_state:
+    st.session_state.inventory_items = {}
+if "requests" not in st.session_state:
+    st.session_state.requests = {}
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
-if "inventory_data" not in st.session_state:
-    st.session_state.inventory_data = []
-if "pending_requests" not in st.session_state:
-    st.session_state.pending_requests = []
 if "event_name" not in st.session_state:
     st.session_state.event_name = "AESA Squadron 72"
 if "password_required" not in st.session_state:
     st.session_state.password_required = True
 if "survey_enabled" not in st.session_state:
     st.session_state.survey_enabled = False
-if "show_cookie_consent" not in st.session_state:
-    st.session_state.show_cookie_consent = True
-if "use_mobile_view" not in st.session_state:
-    st.session_state.use_mobile_view = False
-if "show_survey_dialog" not in st.session_state:
-    st.session_state.show_survey_dialog = False
+if "current_filter" not in st.session_state:
+    st.session_state.current_filter = None
 
-# Sample inventory data for demonstration
-SAMPLE_INVENTORY = [
-    {"id": 1, "item": "Combat Helmet", "category": "Safety", "status": "complete", "requestor": "SSgt Johnson", "date_requested": "2025-01-10"},
-    {"id": 2, "item": "Field Radio", "category": "Communications", "status": "missing", "requestor": "A1C Smith", "date_requested": "2025-01-11"},
-    {"id": 3, "item": "Night Vision Goggles", "category": "Optics", "status": "verified", "requestor": "TSgt Davis", "date_requested": "2025-01-12"},
-    {"id": 4, "item": "Body Armor", "category": "Protection", "status": "returned", "requestor": "SrA Wilson", "date_requested": "2025-01-13"},
-    {"id": 5, "item": "Medical Kit", "category": "Medical", "status": "complete", "requestor": "MSgt Brown", "date_requested": "2025-01-14"},
-]
+# Sample data matching React app structure
+SAMPLE_INVENTORY = {
+    "item1": {
+        "itemName": "Combat Helmet",
+        "requested": 5,
+        "onHand": 2,
+        "received": 3,
+        "missing": 0,
+        "custodian": "SSgt Johnson",
+        "location": "Supply Room A",
+        "email": "johnson@example.com",
+        "phone": "555-0101",
+        "expendable": False,
+        "verified": False,
+        "returned": False,
+        "timestamp": 1735862400000
+    },
+    "item2": {
+        "itemName": "Field Radio",
+        "requested": 3,
+        "onHand": 1,
+        "received": 0,
+        "missing": 3,
+        "custodian": "A1C Smith",
+        "location": "Comm Center",
+        "email": "smith@example.com",
+        "phone": "555-0102",
+        "expendable": False,
+        "verified": False,
+        "returned": False,
+        "timestamp": 1735862400000
+    },
+    "item3": {
+        "itemName": "Night Vision Goggles",
+        "requested": 2,
+        "onHand": 2,
+        "received": 2,
+        "missing": 0,
+        "custodian": "TSgt Davis",
+        "location": "Equipment Bay",
+        "email": "davis@example.com",
+        "phone": "555-0103",
+        "expendable": False,
+        "verified": True,
+        "returned": False,
+        "timestamp": 1735862400000
+    }
+}
 
-if not st.session_state.inventory_data:
-    st.session_state.inventory_data = SAMPLE_INVENTORY
+if not st.session_state.inventory_items:
+    st.session_state.inventory_items = SAMPLE_INVENTORY
 
-def authenticate_user(password: str) -> bool:
-    """Authenticate user with event password"""
-    # In production, this would validate against a secure database
-    return password == "squadron72" or password == "admin"
-
-def authenticate_admin(password: str) -> bool:
-    """Authenticate admin with master password"""
-    return password == "Ku2023!@"
+def get_item_status(item):
+    """Get item status exactly like React app"""
+    if item.get('returned', False):
+        return 'returned'
+    if item.get('verified', False):
+        return 'assigned'
+    if (item.get('received', 0) >= item.get('requested', 0)):
+        return 'received'
+    return 'missing'
 
 def render_header():
-    """Render the application header"""
+    """Render header exactly matching React app"""
     st.markdown(f"""
     <div class="main-header">
-        <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div style="padding: 1rem; display: flex; align-items: center; justify-content: space-between;">
             <div style="display: flex; align-items: center;">
-                <div style="background: #3b82f6; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
+                <div style="width: 40px; height: 40px; background: hsl(210, 70%, 25%); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
                     🛡️
                 </div>
                 <div>
-                    <h1 style="margin: 0; font-size: 1.5rem;">{st.session_state.event_name}</h1>
-                    <p style="margin: 0; opacity: 0.8;">Inventory Management System</p>
+                    <h1 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: hsl(200, 7%, 92%);">{st.session_state.event_name}</h1>
+                    <p style="margin: 0; color: hsl(210, 7%, 58%); font-size: 0.875rem;">Inventory Management System</p>
                 </div>
             </div>
             <div style="display: flex; align-items: center; gap: 1rem;">
-                <div style="background: rgba(34, 197, 94, 0.2); padding: 0.5rem 1rem; border-radius: 0.5rem;">
-                    <span style="color: #22c55e;">● System Online</span>
+                <div style="background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.3); padding: 0.5rem 1rem; border-radius: 0.375rem;">
+                    <span style="color: #22c55e; font-size: 0.875rem;">● System Online</span>
                 </div>
-                {f'<div style="background: rgba(59, 130, 246, 0.2); padding: 0.5rem 1rem; border-radius: 0.5rem;"><span style="color: #3b82f6;">🛡️ Admin Access</span></div>' if st.session_state.authenticated else ''}
+                {f'<div style="background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.3); padding: 0.5rem 1rem; border-radius: 0.375rem;"><span style="color: #3b82f6; font-size: 0.875rem;">🛡️ Admin Access</span></div>' if st.session_state.authenticated else ''}
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
+    
+    # Survey button matching React placement
+    if st.session_state.survey_enabled:
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            if st.button("📋 Please take this quick survey", key="survey_btn", type="primary"):
+                st.session_state.show_survey = True
 
 def render_request_form():
-    """Render the equipment request form"""
-    st.subheader("Request Equipment")
+    """Request form exactly matching React app"""
+    st.markdown('<div class="inventory-card">', unsafe_allow_html=True)
     
-    with st.form("request_form"):
+    st.markdown("""
+    <div class="card-title">
+        ➕ Request Items
+    </div>
+    <div class="card-description">
+        Submit a new inventory request for review
+    </div>
+    """, unsafe_allow_html=True)
+    
+    with st.form("request_form", clear_on_submit=True):
         col1, col2 = st.columns(2)
         
         with col1:
-            requestor_name = st.text_input("Requestor Name", placeholder="Enter your name")
-            item_name = st.text_input("Item Name", placeholder="Equipment requested")
-            category = st.selectbox("Category", ["Safety", "Communications", "Optics", "Protection", "Medical", "Other"])
+            item_name = st.text_input("Item Name *", placeholder="Enter item name")
+            requested = st.number_input("Quantity Requested *", min_value=1, value=1)
+            custodian = st.text_input("Custodian (Who Needs It) *", placeholder="Enter custodian name")
         
         with col2:
-            priority = st.selectbox("Priority", ["Low", "Medium", "High", "Critical"])
-            quantity = st.number_input("Quantity", min_value=1, value=1)
-            justification = st.text_area("Justification", placeholder="Reason for request")
+            location = st.text_input("Location *", placeholder="Enter location")
+            email = st.text_input("Email Address *", placeholder="Enter email address")
+            phone = st.text_input("Phone Number", placeholder="Enter phone number")
         
-        submitted = st.form_submit_button("Submit Request", type="primary")
+        expendable = st.selectbox("Item Type", ["Non-Expendable (Returnable)", "Expendable (Consumable)"])
         
-        if submitted:
-            if requestor_name and item_name:
-                new_request = {
-                    "id": len(st.session_state.pending_requests) + 1,
-                    "requestor": requestor_name,
-                    "item": item_name,
-                    "category": category,
-                    "priority": priority,
-                    "quantity": quantity,
-                    "justification": justification,
-                    "date_requested": datetime.now().strftime("%Y-%m-%d"),
-                    "status": "pending"
+        col_btn1, col_btn2 = st.columns([1, 1])
+        with col_btn1:
+            clear_btn = st.form_submit_button("🗑️ Clear Form", type="secondary")
+        with col_btn2:
+            submit_btn = st.form_submit_button("🛡️ Submit Request", type="primary")
+        
+        if submit_btn:
+            if item_name and requested and custodian and location and email:
+                new_key = f"req_{len(st.session_state.requests) + 1}"
+                st.session_state.requests[new_key] = {
+                    "itemName": item_name,
+                    "requested": requested,
+                    "custodian": custodian,
+                    "location": location,
+                    "email": email,
+                    "phone": phone or "",
+                    "expendable": expendable == "Expendable (Consumable)",
+                    "timestamp": datetime.now().timestamp() * 1000
                 }
-                st.session_state.pending_requests.append(new_request)
-                st.success(f"Request submitted for {item_name}")
+                st.success(f"✅ Your request for {item_name} has been submitted successfully.")
                 st.rerun()
             else:
-                st.error("Please fill in all required fields")
+                st.error("❌ Please fill in all required fields (marked with *)")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 def render_inventory_table():
-    """Render the inventory tracking table matching original design"""
-    st.markdown('<div class="stContainer">', unsafe_allow_html=True)
-    st.markdown("#### 📦 Inventory Status")
+    """Inventory table exactly matching React app"""
+    st.markdown('<div class="inventory-card">', unsafe_allow_html=True)
     
-    if st.session_state.inventory_data:
-        # Ensure we have a proper DataFrame
-        try:
-            df = pd.DataFrame(st.session_state.inventory_data)
-        except Exception as e:
-            st.error(f"Error loading inventory data: {str(e)}")
-            return
-        
-        # Filter options
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            status_filter = st.selectbox("Filter by Status", ["All", "missing", "complete", "verified", "returned"])
-        with col2:
-            category_filter = st.selectbox("Filter by Category", ["All"] + list(set([item.get("category", "Unknown") for item in st.session_state.inventory_data])))
-        with col3:
-            search_term = st.text_input("Search Items", placeholder="Search by item name...")
-        
-        # Apply filters
-        filtered_df = df.copy()
-        if status_filter != "All":
-            filtered_df = filtered_df[filtered_df["status"] == status_filter]
-        if category_filter != "All":
-            filtered_df = filtered_df[filtered_df["category"] == category_filter]
-        if search_term:
-            # Convert to string first to avoid pandas type issues
-            try:
-                # Ensure we have strings and filter safely
-                item_series = filtered_df["item"].astype(str)
-                mask = item_series.str.contains(search_term, case=False, na=False)
-                filtered_df = filtered_df[mask]
-            except Exception:
-                # Fallback if string operations fail
-                filtered_df = filtered_df
-        
-        # Display inventory data
-        if len(filtered_df) > 0:
-            # Use native pandas display for Streamlit Cloud compatibility
-            st.dataframe(filtered_df, use_container_width=True)
+    st.markdown("""
+    <div class="card-title">
+        📦 Inventory Tracking
+    </div>
+    <div class="card-description">
+        Monitor and manage inventory status
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Filter buttons exactly like React app
+    st.markdown("**Filters:**")
+    col1, col2, col3, col4, col5 = st.columns(5)
+    
+    with col1:
+        if st.button("⚠️ Missing", key="filter_missing"):
+            st.session_state.current_filter = 'missing' if st.session_state.current_filter != 'missing' else None
+    
+    with col2:
+        if st.button("✅ Received", key="filter_received"):
+            st.session_state.current_filter = 'received' if st.session_state.current_filter != 'received' else None
+    
+    with col3:
+        if st.button("🛡️ Assigned", key="filter_assigned"):
+            st.session_state.current_filter = 'assigned' if st.session_state.current_filter != 'assigned' else None
+    
+    with col4:
+        if st.button("🔄 Returned", key="filter_returned"):
+            st.session_state.current_filter = 'returned' if st.session_state.current_filter != 'returned' else None
+    
+    with col5:
+        if st.button("📊 Export", key="export_btn"):
+            # Export functionality
+            items_list = []
+            for key, item in st.session_state.inventory_items.items():
+                status = get_item_status(item)
+                items_list.append({
+                    "Item Name": item.get("itemName", ""),
+                    "Requested": item.get("requested", 0),
+                    "On Hand": item.get("onHand", 0),
+                    "Received": item.get("received", 0),
+                    "Missing": item.get("missing", 0),
+                    "Custodian": item.get("custodian", ""),
+                    "Location": item.get("location", ""),
+                    "Email": item.get("email", ""),
+                    "Phone": item.get("phone", ""),
+                    "Expendable": "Yes" if item.get("expendable", False) else "No",
+                    "Status": status.title()
+                })
             
-            # Admin controls for status updates
-            if st.session_state.authenticated:
-                st.subheader("Admin Controls")
-                item_to_update = st.selectbox("Select item to update:", 
-                                              options=[(item["id"], item["item"]) for item in st.session_state.inventory_data],
-                                              format_func=lambda x: x[1])
-                
-                if item_to_update:
-                    current_item = next((item for item in st.session_state.inventory_data if item["id"] == item_to_update[0]), None)
-                    if current_item:
-                        new_status = st.selectbox("Update status:", 
-                                                  ["missing", "complete", "verified", "returned"],
-                                                  index=["missing", "complete", "verified", "returned"].index(current_item["status"]))
-                        
-                        if st.button("Update Status"):
-                            current_item["status"] = new_status
-                            st.success(f"Updated {current_item['item']} to {new_status}")
-                            st.rerun()
-        else:
-            st.info("No items match the current filters")
+            if items_list:
+                df = pd.DataFrame(items_list)
+                csv = df.to_csv(index=False)
+                st.download_button(
+                    label="💾 Download CSV",
+                    data=csv,
+                    file_name=f"inventory_export_{datetime.now().strftime('%Y-%m-%d')}.csv",
+                    mime="text/csv"
+                )
+    
+    # Filter items based on current filter
+    filtered_items = {}
+    for key, item in st.session_state.inventory_items.items():
+        if st.session_state.current_filter is None:
+            filtered_items[key] = item
+        elif get_item_status(item) == st.session_state.current_filter:
+            filtered_items[key] = item
+    
+    if filtered_items:
+        # Create table data exactly matching React app
+        table_data = []
+        for key, item in filtered_items.items():
+            status = get_item_status(item)
+            table_data.append({
+                "Item Name": item.get("itemName", ""),
+                "Requested": item.get("requested", 0),
+                "On Hand": item.get("onHand", 0),
+                "Received": item.get("received", 0),
+                "Missing": item.get("missing", 0),
+                "Custodian": item.get("custodian", ""),
+                "Location": item.get("location", ""),
+                "Contact": f"{item.get('email', '')}\n{item.get('phone', '')}",
+                "Type": "Expendable" if item.get("expendable", False) else "Non-Expendable",
+                "Status": status.title(),
+                "Actions": "Actions"
+            })
+        
+        df = pd.DataFrame(table_data)
+        st.dataframe(df, use_container_width=True, hide_index=True)
+        
+        # Action buttons for each item (admin only)
+        if st.session_state.authenticated:
+            st.markdown("---")
+            st.markdown("**Admin Actions:**")
+            for key, item in filtered_items.items():
+                with st.expander(f"Actions for {item.get('itemName', 'Unknown Item')}"):
+                    status = get_item_status(item)
+                    
+                    col1, col2, col3 = st.columns(3)
+                    
+                    if status == 'missing':
+                        with col1:
+                            received_qty = st.number_input(f"Received Qty", min_value=0, key=f"recv_{key}")
+                        with col2:
+                            if st.button(f"➕ Add Received", key=f"add_recv_{key}"):
+                                if received_qty >= 0:
+                                    st.session_state.inventory_items[key]['received'] = received_qty
+                                    st.success(f"✅ Updated received quantity to {received_qty}")
+                                    st.rerun()
+                    
+                    elif status == 'received':
+                        with col1:
+                            if st.button(f"🛡️ Assign", key=f"assign_{key}"):
+                                st.session_state.inventory_items[key]['verified'] = True
+                                st.success(f"✅ Item has been assigned successfully")
+                                st.rerun()
+                    
+                    elif status == 'assigned':
+                        with col1:
+                            if st.button(f"🔄 Mark Returned", key=f"return_{key}"):
+                                st.session_state.inventory_items[key]['returned'] = True
+                                st.success(f"✅ Item has been marked as returned")
+                                st.rerun()
+                        with col2:
+                            returned_amt = st.number_input(f"Amount Returned", min_value=0, max_value=item.get('requested', 0), key=f"ret_amt_{key}")
+                        with col3:
+                            if st.button(f"➖ Record Missing", key=f"missing_{key}"):
+                                missing = item.get('requested', 0) - returned_amt
+                                st.session_state.inventory_items[key]['missing'] = missing
+                                st.session_state.inventory_items[key]['received'] = returned_amt
+                                st.success(f"✅ Missing quantity set to {missing}")
+                                st.rerun()
+                    
+                    # Edit and Delete buttons for all items
+                    with col3:
+                        if st.button(f"✏️ Edit", key=f"edit_{key}"):
+                            st.info("Edit functionality would open a dialog here")
+                        if st.button(f"🗑️ Delete", key=f"delete_{key}"):
+                            if st.button(f"⚠️ Confirm Delete", key=f"confirm_del_{key}"):
+                                del st.session_state.inventory_items[key]
+                                st.success(f"✅ Item deleted successfully")
+                                st.rerun()
     else:
-        st.info("No inventory data available")
+        st.info("No inventory items found.")
     
     st.markdown('</div>', unsafe_allow_html=True)
 
 def render_admin_panel():
-    """Render the admin control panel"""
+    """Admin panel exactly matching React app"""
     if not st.session_state.authenticated:
-        st.warning("Admin access required")
+        st.markdown('<div class="inventory-card">', unsafe_allow_html=True)
+        st.warning("🔐 Admin access required")
         password = st.text_input("Enter admin password", type="password")
-        if st.button("Authenticate"):
-            if authenticate_admin(password):
+        if st.button("🔓 Authenticate"):
+            if password == "admin":  # Simple auth for demo
                 st.session_state.authenticated = True
-                st.success("Admin authenticated")
+                st.success("✅ Admin authenticated")
                 st.rerun()
             else:
-                st.error("Invalid admin password")
+                st.error("❌ Invalid admin password")
+        st.markdown('</div>', unsafe_allow_html=True)
         return
     
-    st.subheader("Admin Control Panel")
+    # Event Configuration
+    st.markdown('<div class="inventory-card">', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="card-title">
+        📅 Event Configuration
+    </div>
+    <div class="card-description">
+        Set the current event name for the inventory system
+    </div>
+    """, unsafe_allow_html=True)
     
-    # Admin controls in expandable sections
-    with st.expander("System Settings", expanded=True):
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        new_event_name = st.text_input(
+            f"Current Event: **{st.session_state.event_name}**",
+            placeholder="Enter new event name"
+        )
+    with col2:
+        if st.button("💾 Save Event Name"):
+            if new_event_name.strip():
+                st.session_state.event_name = new_event_name.strip()
+                st.success(f"✅ Event name updated to '{new_event_name.strip()}'")
+                st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Survey Management
+    st.markdown('<div class="inventory-card">', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="card-title">
+        📋 Survey Management
+    </div>
+    <div class="card-description">
+        Control survey display and export response data
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        survey_enabled = st.checkbox(
+            "Enable Survey Button",
+            value=st.session_state.survey_enabled,
+            help="When enabled, a survey button will appear in the header for all users"
+        )
+        if survey_enabled != st.session_state.survey_enabled:
+            st.session_state.survey_enabled = survey_enabled
+            st.success("✅ Survey setting updated")
+            st.rerun()
+    
+    with col2:
+        if st.button("📊 Export Survey Data"):
+            st.info("Export functionality would download CSV here")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Add New Item
+    st.markdown('<div class="inventory-card">', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="card-title">
+        ➕ Add Inventory Item
+    </div>
+    <div class="card-description">
+        Add a new item to the inventory system
+    </div>
+    """, unsafe_allow_html=True)
+    
+    with st.form("add_item_form"):
         col1, col2 = st.columns(2)
         
         with col1:
-            new_event_name = st.text_input("Event Name", value=st.session_state.event_name)
-            if st.button("Update Event Name"):
-                st.session_state.event_name = new_event_name
-                st.success("Event name updated")
-                st.rerun()
+            item_name = st.text_input("Item Name *")
+            requested = st.number_input("Requested Quantity *", min_value=1, value=1)
+            on_hand = st.number_input("On Hand Quantity", min_value=0, value=0)
+            custodian = st.text_input("Custodian")
         
         with col2:
-            password_required = st.checkbox("Require Password for Access", value=st.session_state.password_required)
-            if password_required != st.session_state.password_required:
-                st.session_state.password_required = password_required
-                st.success("Password requirement updated")
-                st.rerun()
-    
-    with st.expander("Survey Management"):
-        survey_enabled = st.checkbox("Enable Survey Button", value=st.session_state.survey_enabled)
-        if survey_enabled != st.session_state.survey_enabled:
-            st.session_state.survey_enabled = survey_enabled
-            st.success("Survey setting updated")
-            st.rerun()
-    
-    with st.expander("Inventory Management"):
-        st.write("**Add New Inventory Item**")
+            location = st.text_input("Location")
+            email = st.text_input("Email Address")
+            phone = st.text_input("Phone Number")
+            expendable = st.selectbox("Item Type", ["Non-Expendable", "Expendable"])
         
-        with st.form("add_inventory"):
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                new_item = st.text_input("Item Name")
-                new_category = st.selectbox("Category", ["Safety", "Communications", "Optics", "Protection", "Medical", "Other"])
-            with col2:
-                new_status = st.selectbox("Initial Status", ["missing", "complete", "verified", "returned"])
-                new_requestor = st.text_input("Requestor")
-            with col3:
-                if st.form_submit_button("Add Item"):
-                    if new_item:
-                        new_id = max([item["id"] for item in st.session_state.inventory_data], default=0) + 1
-                        new_inventory_item = {
-                            "id": new_id,
-                            "item": new_item,
-                            "category": new_category,
-                            "status": new_status,
-                            "requestor": new_requestor,
-                            "date_requested": datetime.now().strftime("%Y-%m-%d")
-                        }
-                        st.session_state.inventory_data.append(new_inventory_item)
-                        st.success(f"Added {new_item} to inventory")
-                        st.rerun()
-        
-        # Reset inventory
-        if st.button("Reset All Inventory Data", type="secondary"):
-            if st.checkbox("Confirm reset (this cannot be undone)"):
-                st.session_state.inventory_data = SAMPLE_INVENTORY.copy()
-                st.session_state.pending_requests = []
-                st.success("Inventory data reset")
+        if st.form_submit_button("🛡️ Add Item", type="primary"):
+            if item_name and requested:
+                new_key = f"admin_item_{len(st.session_state.inventory_items) + 1}"
+                st.session_state.inventory_items[new_key] = {
+                    "itemName": item_name,
+                    "requested": requested,
+                    "onHand": on_hand,
+                    "received": 0,
+                    "missing": 0,
+                    "custodian": custodian or "",
+                    "location": location or "",
+                    "email": email or "",
+                    "phone": phone or "",
+                    "expendable": expendable == "Expendable",
+                    "verified": False,
+                    "returned": False,
+                    "timestamp": datetime.now().timestamp() * 1000
+                }
+                st.success(f"✅ {item_name} has been added to inventory successfully")
                 st.rerun()
+            else:
+                st.error("❌ Please fill in all required fields")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Reset Data
+    st.markdown('<div class="inventory-card">', unsafe_allow_html=True)
+    st.markdown("**⚠️ Danger Zone**")
+    
+    if st.button("🗑️ Reset All Data", type="secondary"):
+        master_password = st.text_input("Enter master password to reset:", type="password", key="master_pwd")
+        if st.button("⚠️ Confirm Reset", type="secondary"):
+            if master_password == "Ku2023!@":
+                st.session_state.inventory_items = {}
+                st.session_state.requests = {}
+                st.success("✅ All data has been reset")
+                st.rerun()
+            else:
+                st.error("❌ Incorrect master password")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 def render_pending_requests():
-    """Render pending requests view"""
-    st.subheader("Pending Requests")
-    
+    """Pending requests exactly matching React app"""
     if not st.session_state.authenticated:
-        st.warning("Authentication required to view pending requests")
+        st.warning("🔐 Authentication required to view pending requests")
         return
     
-    if st.session_state.pending_requests:
-        for idx, request in enumerate(st.session_state.pending_requests):
+    st.markdown('<div class="inventory-card">', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="card-title">
+        ⏰ Pending Requests
+    </div>
+    <div class="card-description">
+        Review and approve submitted inventory requests
+    </div>
+    """, unsafe_allow_html=True)
+    
+    if st.session_state.requests:
+        st.markdown(f"**{len(st.session_state.requests)} pending request(s)**")
+        
+        for req_key, request in st.session_state.requests.items():
             with st.container():
-                col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
+                st.markdown("---")
+                col1, col2, col3 = st.columns([3, 2, 2])
                 
                 with col1:
-                    st.write(f"**{request['item']}** - {request['requestor']}")
-                    st.write(f"Priority: {request['priority']} | Quantity: {request['quantity']}")
-                    if request.get('justification'):
-                        st.write(f"Justification: {request['justification']}")
+                    st.markdown(f"**{request.get('itemName', 'Unknown')}** - {request.get('custodian', 'Unknown')}")
+                    st.markdown(f"Quantity: **{request.get('requested', 0)}**")
+                    st.markdown(f"Location: {request.get('location', 'Not specified')}")
                 
                 with col2:
-                    st.write(f"Category: {request['category']}")
-                    st.write(f"Date: {request['date_requested']}")
+                    st.markdown(f"**Contact:**")
+                    st.markdown(f"📧 {request.get('email', 'No email')}")
+                    if request.get('phone'):
+                        st.markdown(f"📞 {request.get('phone')}")
+                    st.markdown(f"Type: {'Expendable' if request.get('expendable', False) else 'Non-Expendable'}")
                 
                 with col3:
-                    if st.button("Approve", key=f"approve_{idx}"):
-                        # Move to inventory with complete status
-                        new_id = max([item["id"] for item in st.session_state.inventory_data], default=0) + 1
-                        inventory_item = {
-                            "id": new_id,
-                            "item": request['item'],
-                            "category": request['category'],
-                            "status": "complete",
-                            "requestor": request['requestor'],
-                            "date_requested": request['date_requested']
-                        }
-                        st.session_state.inventory_data.append(inventory_item)
-                        st.session_state.pending_requests.pop(idx)
-                        st.success(f"Approved {request['item']}")
-                        st.rerun()
-                
-                with col4:
-                    if st.button("Deny", key=f"deny_{idx}"):
-                        st.session_state.pending_requests.pop(idx)
-                        st.success(f"Denied {request['item']}")
-                        st.rerun()
-                
-                st.divider()
+                    col_approve, col_deny = st.columns(2)
+                    with col_approve:
+                        if st.button("✅ Approve", key=f"approve_{req_key}"):
+                            # Move to inventory
+                            new_key = f"item_{len(st.session_state.inventory_items) + 1}"
+                            st.session_state.inventory_items[new_key] = {
+                                "itemName": request.get('itemName', ''),
+                                "requested": request.get('requested', 0),
+                                "onHand": 0,
+                                "received": request.get('requested', 0),  # Mark as received
+                                "missing": 0,
+                                "custodian": request.get('custodian', ''),
+                                "location": request.get('location', ''),
+                                "email": request.get('email', ''),
+                                "phone": request.get('phone', ''),
+                                "expendable": request.get('expendable', False),
+                                "verified": False,
+                                "returned": False,
+                                "timestamp": datetime.now().timestamp() * 1000
+                            }
+                            del st.session_state.requests[req_key]
+                            st.success(f"✅ Approved {request.get('itemName')} - Added to inventory")
+                            st.rerun()
+                    
+                    with col_deny:
+                        if st.button("❌ Deny", key=f"deny_{req_key}"):
+                            del st.session_state.requests[req_key]
+                            st.success(f"❌ Denied {request.get('itemName')}")
+                            st.rerun()
     else:
-        st.info("No pending requests")
-
-def render_survey_dialog():
-    """Render survey form"""
-    if not st.session_state.survey_enabled:
-        return
-        
-    if st.button("📋 Please take this quick survey", type="primary"):
-        with st.form("survey_form"):
-            st.subheader("System Feedback Survey")
-            
-            user_type = st.selectbox("User Type", ["Event Senior Staff", "Event Participant", "Requestor Only"])
-            would_use_again = st.radio("Would you use this system again?", ["Yes", "No", "Maybe"])
-            prefer_over_excel = st.radio("Do you prefer this system over Excel spreadsheets?", ["Yes", "No", "Same"])
-            feedback = st.text_area("Additional Feedback", placeholder="Any suggestions or comments...")
-            
-            if st.form_submit_button("Submit Survey"):
-                # In production, this would save to Firebase/database
-                st.success("Thank you for your feedback!")
+        st.info("📭 No pending requests")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 def main():
-    """Main application function"""
-    try:
-        render_header()
-        
-        # Survey button in header area if enabled
-        if st.session_state.survey_enabled:
-            render_survey_dialog()
-        
-        # Authentication check for protected tabs
-        protected_tabs = ["Inventory Tracking", "Admin Panel", "Pending Requests"]
-        
-        # Main navigation tabs
-        tabs = st.tabs(["➕ Request Items", "📦 Inventory Tracking", "⚙️ Admin Panel", "⏰ Pending Requests"])
-    except Exception as e:
-        st.error(f"Application error: {str(e)}")
-        st.stop()
+    """Main application exactly matching React app structure"""
+    render_header()
     
-    with tabs[0]:
+    # Main tabs exactly matching React app
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "➕ Request Items",
+        "📦 Inventory Tracking", 
+        "⚙️ Admin Panel",
+        "⏰ Pending Requests"
+    ])
+    
+    with tab1:
         render_request_form()
     
-    with tabs[1]:
+    with tab2:
         if st.session_state.password_required and not st.session_state.authenticated:
-            st.warning("Authentication required for inventory access")
+            st.warning("🔐 Authentication required for inventory access")
             password = st.text_input("Enter event password", type="password", key="inventory_auth")
-            if st.button("Access Inventory"):
-                if authenticate_user(password):
+            if st.button("🔓 Access Inventory"):
+                if password == "squadron72":  # Default event password
                     st.session_state.authenticated = True
-                    st.success("Access granted")
+                    st.success("✅ Access granted")
                     st.rerun()
                 else:
-                    st.error("Invalid password")
+                    st.error("❌ Invalid password")
         else:
             render_inventory_table()
     
-    with tabs[2]:
+    with tab3:
         render_admin_panel()
     
-    with tabs[3]:
+    with tab4:
         if st.session_state.password_required and not st.session_state.authenticated:
-            st.warning("Authentication required for pending requests")
+            st.warning("🔐 Authentication required for pending requests")
             password = st.text_input("Enter event password", type="password", key="pending_auth")
-            if st.button("Access Pending"):
-                if authenticate_user(password):
+            if st.button("🔓 Access Pending"):
+                if password == "squadron72":
                     st.session_state.authenticated = True
-                    st.success("Access granted")
+                    st.success("✅ Access granted")
                     st.rerun()
                 else:
-                    st.error("Invalid password")
+                    st.error("❌ Invalid password")
         else:
             render_pending_requests()
     
-    # Footer
-    st.markdown("---")
+    # Footer exactly matching React app
     st.markdown("""
-    <div style="text-align: center; color: #6b7280; font-size: 0.8rem; padding: 1rem;">
-        <strong>Tech Support & Owner:</strong> C/CMSgt Kendrick Uhles • (661) 381-3184 • 
-        <a href="mailto:Kendrick.Uhles@CawgCap.org">Kendrick.Uhles@CawgCap.org</a><br>
-        <em>If you want to use this system for your own events, contact me at my email</em>
+    <div class="footer">
+        <div style="opacity: 0.7;">
+            <strong>Tech Support & Owner:</strong> C/CMSgt Kendrick Uhles • (661) 381-3184 • 
+            <a href="mailto:Kendrick.Uhles@CawgCap.org" style="color: hsl(203, 89%, 53%); text-decoration: none;">Kendrick.Uhles@CawgCap.org</a>
+        </div>
+        <div style="margin-top: 0.5rem; opacity: 0.6;">
+            <em>If you want to use this system for your own events, contact me at my email</em>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
