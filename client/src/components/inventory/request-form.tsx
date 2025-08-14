@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { database } from "@/lib/firebase";
-import { ref, push, set } from "firebase/database";
+import { ref, push, set, remove } from "firebase/database";
 import { Plus, X, Shield } from "lucide-react";
 import type { RequestItem } from "@/types/inventory";
 
@@ -44,18 +44,36 @@ export function RequestForm() {
 
   const onSubmit = async (data: RequestFormData) => {
     setIsSubmitting(true);
+    let requestRef: any = null;
+    
     try {
       const requestData: RequestItem = {
         ...data,
         timestamp: Date.now(),
       };
 
-      const newRef = push(ref(database, "requests"));
-      await set(newRef, requestData);
+      requestRef = push(ref(database, "requests"));
+      await set(requestRef, requestData);
 
       toast({
         title: "Request Submitted",
-        description: "Your item request has been submitted successfully.",
+        description: `Your request for ${data.itemName} has been submitted successfully.`,
+        undoAction: async () => {
+          try {
+            await remove(requestRef);
+            toast({
+              title: "Request Cancelled",
+              description: `Your request for ${data.itemName} has been cancelled.`,
+            });
+          } catch (error) {
+            console.error("Error cancelling request:", error);
+            toast({
+              title: "Error",
+              description: "Failed to cancel request.",
+              variant: "destructive",
+            });
+          }
+        },
       });
 
       form.reset();

@@ -6,6 +6,16 @@ This is an AESA Squadron 72 Inventory Management System - a full-stack web appli
 
 Preferred communication style: Simple, everyday language.
 
+# Recent Changes (August 14, 2025)
+
+## Enhanced Toast Notification System
+- **Maximum Popup Limit**: Implemented 3-popup maximum display with automatic removal of oldest notifications
+- **Auto-Dismiss Timer**: Added 5-second auto-dismiss functionality for all toast notifications
+- **Undo Functionality**: Enhanced toasts with undo button capability for reversible actions
+- **Improved UX**: Added ToastDemo component for testing new features with comprehensive examples
+- **Real Actions**: Updated inventory and request forms to include undo functionality with actual database operations
+- **Better Management**: Implemented proper timeout cleanup and toast lifecycle management
+
 # System Architecture
 
 ## Frontend Architecture

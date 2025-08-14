@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { useEventName } from "@/hooks/use-auth";
 import { database } from "@/lib/firebase";
-import { ref, push, set, remove } from "firebase/database";
+import { ref, push, set, remove, get } from "firebase/database";
 import { Settings, Plus, Trash, AlertTriangle, Save, Calendar } from "lucide-react";
 import type { InventoryItem } from "@/types/inventory";
 
@@ -50,6 +50,8 @@ export function AdminPanel() {
 
   const onSubmit = async (data: AdminFormData) => {
     setIsSubmitting(true);
+    let itemRef: any = null;
+    
     try {
       const itemData: InventoryItem = {
         itemName: data.itemName,
@@ -66,12 +68,28 @@ export function AdminPanel() {
         timestamp: Date.now(),
       };
 
-      const newRef = push(ref(database, "inventory"));
-      await set(newRef, itemData);
+      itemRef = push(ref(database, "inventory"));
+      await set(itemRef, itemData);
 
       toast({
         title: "Item Added",
-        description: "Item has been added to inventory successfully.",
+        description: `${data.itemName} has been added to inventory successfully.`,
+        undoAction: async () => {
+          try {
+            await remove(itemRef);
+            toast({
+              title: "Item Removed",
+              description: `${data.itemName} has been removed from inventory.`,
+            });
+          } catch (error) {
+            console.error("Error removing item:", error);
+            toast({
+              title: "Error",
+              description: "Failed to undo item addition.",
+              variant: "destructive",
+            });
+          }
+        },
       });
 
       form.reset();
@@ -93,11 +111,36 @@ export function AdminPanel() {
     }
 
     setIsResetting(true);
+    let backupData: any = null;
+    
     try {
+      // Create a backup before deletion
+      const snapshot = await get(ref(database, "inventory"));
+      backupData = snapshot.val();
+      
       await remove(ref(database, "inventory"));
+      
       toast({
         title: "Inventory Reset",
         description: "All inventory items have been deleted successfully.",
+        undoAction: async () => {
+          try {
+            if (backupData) {
+              await set(ref(database, "inventory"), backupData);
+              toast({
+                title: "Inventory Restored",
+                description: "All inventory items have been restored successfully.",
+              });
+            }
+          } catch (error) {
+            console.error("Error restoring inventory:", error);
+            toast({
+              title: "Error",
+              description: "Failed to restore inventory.",
+              variant: "destructive",
+            });
+          }
+        },
       });
     } catch (error) {
       console.error("Error resetting inventory:", error);

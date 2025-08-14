@@ -5,14 +5,17 @@ import type {
   ToastProps,
 } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_LIMIT = 3
+const TOAST_REMOVE_DELAY = 1000
+const TOAST_AUTO_DISMISS_DELAY = 5000
 
 type ToasterToast = ToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  undoAction?: () => void
+  createdAt?: number
 }
 
 const actionTypes = {
@@ -54,6 +57,7 @@ interface State {
 }
 
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
+const autoDismissTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
 
 const addToRemoveQueue = (toastId: string) => {
   if (toastTimeouts.has(toastId)) {
@@ -71,13 +75,48 @@ const addToRemoveQueue = (toastId: string) => {
   toastTimeouts.set(toastId, timeout)
 }
 
+const addToAutoDismissQueue = (toastId: string) => {
+  if (autoDismissTimeouts.has(toastId)) {
+    return
+  }
+
+  const timeout = setTimeout(() => {
+    autoDismissTimeouts.delete(toastId)
+    dispatch({
+      type: "DISMISS_TOAST",
+      toastId: toastId,
+    })
+  }, TOAST_AUTO_DISMISS_DELAY)
+
+  autoDismissTimeouts.set(toastId, timeout)
+}
+
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
-    case "ADD_TOAST":
+    case "ADD_TOAST": {
+      const newToasts = [action.toast, ...state.toasts]
+      
+      // If we exceed the limit, remove the oldest toasts
+      if (newToasts.length > TOAST_LIMIT) {
+        const toastsToRemove = newToasts.slice(TOAST_LIMIT)
+        toastsToRemove.forEach(toast => {
+          // Clear any existing timeouts for removed toasts
+          if (toastTimeouts.has(toast.id)) {
+            clearTimeout(toastTimeouts.get(toast.id))
+            toastTimeouts.delete(toast.id)
+          }
+          if (autoDismissTimeouts.has(toast.id)) {
+            clearTimeout(autoDismissTimeouts.get(toast.id))
+            autoDismissTimeouts.delete(toast.id)
+          }
+        })
+      }
+      
       return {
         ...state,
-        toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
+        toasts: newToasts.slice(0, TOAST_LIMIT),
       }
+    }
 
     case "UPDATE_TOAST":
       return {
@@ -94,9 +133,18 @@ export const reducer = (state: State, action: Action): State => {
       // but I'll keep it here for simplicity
       if (toastId) {
         addToRemoveQueue(toastId)
+        // Clear auto-dismiss timeout when manually dismissing
+        if (autoDismissTimeouts.has(toastId)) {
+          clearTimeout(autoDismissTimeouts.get(toastId))
+          autoDismissTimeouts.delete(toastId)
+        }
       } else {
         state.toasts.forEach((toast) => {
           addToRemoveQueue(toast.id)
+          if (autoDismissTimeouts.has(toast.id)) {
+            clearTimeout(autoDismissTimeouts.get(toast.id))
+            autoDismissTimeouts.delete(toast.id)
+          }
         })
       }
 
@@ -155,11 +203,15 @@ function toast({ ...props }: Toast) {
       ...props,
       id,
       open: true,
+      createdAt: Date.now(),
       onOpenChange: (open) => {
         if (!open) dismiss()
       },
     },
   })
+
+  // Start auto-dismiss timer
+  addToAutoDismissQueue(id)
 
   return {
     id: id,
