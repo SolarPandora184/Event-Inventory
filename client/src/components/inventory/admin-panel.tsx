@@ -172,6 +172,69 @@ export function AdminPanel() {
     });
   };
 
+  const addTestEntries = async () => {
+    setIsSubmitting(true);
+    const testItems = [
+      "Combat Helmet", "Body Armor", "Night Vision Goggles", "Radio Headset", "Tactical Vest",
+      "First Aid Kit", "Ammunition Pouch", "GPS Device", "Flashlight", "Multi-tool"
+    ];
+    
+    const addedRefs: any[] = [];
+    
+    try {
+      for (let i = 0; i < 10; i++) {
+        const itemData: InventoryItem = {
+          itemName: `${testItems[i % testItems.length]} ${i + 1}`,
+          requested: Math.floor(Math.random() * 10) + 1,
+          onHand: Math.floor(Math.random() * 5),
+          received: 0,
+          verified: false,
+          returned: false,
+          custodian: `Test User ${i + 1}`,
+          location: `Section ${String.fromCharCode(65 + (i % 5))}`,
+          email: `test${i + 1}@squadron72.mil`,
+          phone: `555-010${i.toString().padStart(2, '0')}`,
+          expendable: Math.random() > 0.5,
+          timestamp: Date.now() + i,
+        };
+
+        const itemRef = push(ref(database, "inventory"));
+        await set(itemRef, itemData);
+        addedRefs.push(itemRef);
+      }
+
+      toast({
+        title: "Test Entries Added",
+        description: "10 test inventory items have been added successfully.",
+        undoAction: async () => {
+          try {
+            await Promise.all(addedRefs.map(itemRef => remove(itemRef)));
+            toast({
+              title: "Test Entries Removed",
+              description: "All 10 test entries have been removed.",
+            });
+          } catch (error) {
+            console.error("Error removing test entries:", error);
+            toast({
+              title: "Error", 
+              description: "Failed to remove test entries.",
+              variant: "destructive",
+            });
+          }
+        },
+      });
+    } catch (error) {
+      console.error("Error adding test entries:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add test entries. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Event Name Configuration */}
@@ -369,17 +432,30 @@ export function AdminPanel() {
             </div>
 
             <div className="flex items-center justify-between pt-6">
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={resetInventory}
-                disabled={isResetting}
-                data-testid="button-reset-inventory"
-                className="bg-red-600 hover:bg-red-700 text-white"
-              >
-                <Trash className="mr-2 h-4 w-4" />
-                ⚠️ Reset All Inventory
-              </Button>
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={resetInventory}
+                  disabled={isResetting}
+                  data-testid="button-reset-inventory"
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  <Trash className="mr-2 h-4 w-4" />
+                  ⚠️ Reset All Inventory
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addTestEntries}
+                  disabled={isSubmitting}
+                  data-testid="button-add-test-entries"
+                  className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-950"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add 10 Test Items
+                </Button>
+              </div>
               <Button
                 type="submit"
                 disabled={isSubmitting}
