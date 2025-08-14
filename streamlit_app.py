@@ -14,25 +14,139 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for AESA Squadron theming
+# Custom CSS for AESA Squadron theming - matches original React app
 st.markdown("""
 <style>
+    /* Main app styling */
+    .stApp {
+        background-color: #0f172a;
+        color: #f8fafc;
+    }
+    
+    /* Header styling */
     .main-header {
-        background: linear-gradient(90deg, #1a365d, #2d5282);
+        background: linear-gradient(90deg, #1e293b, #334155);
         padding: 1rem;
         border-radius: 0.5rem;
         margin-bottom: 2rem;
         color: white;
+        border: 1px solid #475569;
     }
-    .status-missing { background-color: #fee2e2; color: #dc2626; padding: 0.25rem 0.5rem; border-radius: 0.25rem; }
-    .status-complete { background-color: #dcfce7; color: #16a34a; padding: 0.25rem 0.5rem; border-radius: 0.25rem; }
-    .status-verified { background-color: #e0e7ff; color: #3730a3; padding: 0.25rem 0.5rem; border-radius: 0.25rem; }
-    .status-returned { background-color: #f3e8ff; color: #7c3aed; padding: 0.25rem 0.5rem; border-radius: 0.25rem; }
-    .admin-section { border: 2px solid #3b82f6; padding: 1rem; border-radius: 0.5rem; background-color: #eff6ff; }
+    
+    /* Status badges matching original */
+    .status-missing { 
+        background-color: #fef2f2; 
+        color: #dc2626; 
+        padding: 0.25rem 0.75rem; 
+        border-radius: 0.375rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        display: inline-block;
+    }
+    .status-complete { 
+        background-color: #f0fdf4; 
+        color: #16a34a; 
+        padding: 0.25rem 0.75rem; 
+        border-radius: 0.375rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        display: inline-block;
+    }
+    .status-verified { 
+        background-color: #eff6ff; 
+        color: #2563eb; 
+        padding: 0.25rem 0.75rem; 
+        border-radius: 0.375rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        display: inline-block;
+    }
+    .status-returned { 
+        background-color: #faf5ff; 
+        color: #7c3aed; 
+        padding: 0.25rem 0.75rem; 
+        border-radius: 0.375rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        display: inline-block;
+    }
+    
+    /* Card styling */
+    .stContainer > div {
+        background-color: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin: 0.5rem 0;
+    }
+    
+    /* Button styling */
+    .stButton > button {
+        background-color: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 0.375rem;
+        font-weight: 500;
+    }
+    
+    .stButton > button:hover {
+        background-color: #2563eb;
+    }
+    
+    /* Admin section */
+    .admin-section { 
+        border: 2px solid #3b82f6; 
+        padding: 1.5rem; 
+        border-radius: 0.5rem; 
+        background-color: #1e293b;
+        margin: 1rem 0;
+    }
+    
+    /* Survey button */
+    .survey-button {
+        background-color: #059669 !important;
+        color: white !important;
+        font-weight: 600 !important;
+        padding: 0.75rem 1.5rem !important;
+        border-radius: 0.375rem !important;
+    }
+    
+    /* Footer styling */
+    .footer {
+        border-top: 1px solid #334155;
+        background-color: #1e293b;
+        padding: 1rem;
+        margin-top: 3rem;
+        text-align: center;
+        color: #94a3b8;
+        font-size: 0.75rem;
+    }
+    
+    /* Table styling */
+    .stDataFrame {
+        background-color: #1e293b;
+    }
+    
+    /* Tab styling */
+    .stTabs [data-baseweb="tab-list"] {
+        background-color: #334155;
+        border-radius: 0.5rem;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        color: #94a3b8;
+        background-color: transparent;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background-color: #1e293b;
+        color: #3b82f6;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # Initialize session state
+# Initialize session state - matching original React app state
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 if "inventory_data" not in st.session_state:
@@ -45,6 +159,12 @@ if "password_required" not in st.session_state:
     st.session_state.password_required = True
 if "survey_enabled" not in st.session_state:
     st.session_state.survey_enabled = False
+if "show_cookie_consent" not in st.session_state:
+    st.session_state.show_cookie_consent = True
+if "use_mobile_view" not in st.session_state:
+    st.session_state.use_mobile_view = False
+if "show_survey_dialog" not in st.session_state:
+    st.session_state.show_survey_dialog = False
 
 # Sample inventory data for demonstration
 SAMPLE_INVENTORY = [
@@ -130,8 +250,9 @@ def render_request_form():
                 st.error("Please fill in all required fields")
 
 def render_inventory_table():
-    """Render the inventory tracking table"""
-    st.subheader("Inventory Status")
+    """Render the inventory tracking table matching original design"""
+    st.markdown('<div class="stContainer">', unsafe_allow_html=True)
+    st.markdown("#### 📦 Inventory Status")
     
     if st.session_state.inventory_data:
         # Ensure we have a proper DataFrame
@@ -194,6 +315,8 @@ def render_inventory_table():
             st.info("No items match the current filters")
     else:
         st.info("No inventory data available")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 def render_admin_panel():
     """Render the admin control panel"""
@@ -352,7 +475,7 @@ def main():
         protected_tabs = ["Inventory Tracking", "Admin Panel", "Pending Requests"]
         
         # Main navigation tabs
-        tabs = st.tabs(["Request Items", "Inventory Tracking", "Admin Panel", "Pending Requests"])
+        tabs = st.tabs(["➕ Request Items", "📦 Inventory Tracking", "⚙️ Admin Panel", "⏰ Pending Requests"])
     except Exception as e:
         st.error(f"Application error: {str(e)}")
         st.stop()
