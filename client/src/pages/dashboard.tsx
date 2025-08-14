@@ -222,6 +222,9 @@ export default function Dashboard() {
                 Kendrick.Uhles@CawgCap.org
               </a>
             </span>
+            <div className="mt-2 opacity-60">
+              If you want to use this system for your own events, contact me at my email
+            </div>
           </div>
         </div>
       </footer>
