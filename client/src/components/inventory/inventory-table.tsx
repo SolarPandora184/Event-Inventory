@@ -33,7 +33,8 @@ interface FilterButton {
 const filterButtons: FilterButton[] = [
   { status: 'missing', label: 'Missing', icon: <AlertTriangle className="mr-2 h-4 w-4" />, color: 'border-status-missing text-status-missing hover:bg-status-missing' },
   { status: 'complete', label: 'Complete', icon: <CheckCircle className="mr-2 h-4 w-4" />, color: 'border-status-complete text-status-complete hover:bg-status-complete' },
-  { status: 'verified', label: 'Verified', icon: <Shield className="mr-2 h-4 w-4" />, color: 'border-status-verified text-status-verified hover:bg-status-verified' },
+  { status: 'assigned', label: 'Assigned', icon: <Shield className="mr-2 h-4 w-4" />, color: 'border-status-verified text-status-verified hover:bg-status-verified' },
+  { status: 'returned', label: 'Returned', icon: <Undo2 className="mr-2 h-4 w-4" />, color: 'border-status-returned text-status-returned hover:bg-status-returned' },
 ];
 
 const specialFilters = [
@@ -62,7 +63,7 @@ export function InventoryTable() {
 
   const getItemStatus = (item: InventoryItem): ItemStatus => {
     if (item.returned) return 'returned';
-    if (item.verified) return 'verified';
+    if (item.verified) return 'assigned';
     if ((item.received || 0) >= item.requested) return 'complete';
     return 'missing';
   };
@@ -286,7 +287,7 @@ export function InventoryTable() {
     const variants = {
       missing: "status-missing",
       complete: "status-complete", 
-      verified: "status-verified",
+      assigned: "status-verified",
       returned: "status-returned"
     };
 
@@ -309,7 +310,7 @@ export function InventoryTable() {
           Returned
         </span>
       );
-    } else if (status === 'verified') {
+    } else if (status === 'assigned') {
       primaryAction = (
         <div className="flex items-center gap-2">
           <Button
@@ -392,7 +393,7 @@ export function InventoryTable() {
           className="bg-status-verified hover:bg-opacity-80 text-white"
         >
           <Shield className="mr-1 h-4 w-4" />
-          Verify
+          Assign
         </Button>
       );
     } else {
@@ -533,7 +534,7 @@ export function InventoryTable() {
                   data-testid={`inventory-row-${key}`}
                   className={`border-border transition-colors ${
                     getItemStatus(item) === 'returned' ? 'bg-green-950/20 hover:bg-green-950/30 border-green-600/30' :
-                    getItemStatus(item) === 'verified' ? 'bg-blue-950/20 hover:bg-blue-950/30 border-blue-600/30' :
+                    getItemStatus(item) === 'assigned' ? 'bg-blue-950/20 hover:bg-blue-950/30 border-blue-600/30' :
                     getItemStatus(item) === 'complete' ? 'bg-emerald-950/20 hover:bg-emerald-950/30 border-emerald-600/30' :
                     'bg-red-950/20 hover:bg-red-950/30 border-red-600/30'
                   }`}

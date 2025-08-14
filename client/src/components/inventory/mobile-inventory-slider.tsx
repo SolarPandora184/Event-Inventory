@@ -35,7 +35,8 @@ interface FilterButton {
 const filterButtons: FilterButton[] = [
   { status: 'missing', label: 'Missing', icon: <AlertTriangle className="h-4 w-4" />, color: 'border-status-missing text-status-missing hover:bg-status-missing' },
   { status: 'complete', label: 'Complete', icon: <CheckCircle className="h-4 w-4" />, color: 'border-status-complete text-status-complete hover:bg-status-complete' },
-  { status: 'verified', label: 'Verified', icon: <Shield className="h-4 w-4" />, color: 'border-status-verified text-status-verified hover:bg-status-verified' },
+  { status: 'assigned', label: 'Assigned', icon: <Shield className="h-4 w-4" />, color: 'border-status-verified text-status-verified hover:bg-status-verified' },
+  { status: 'returned', label: 'Returned', icon: <Undo2 className="h-4 w-4" />, color: 'border-status-returned text-status-returned hover:bg-status-returned' },
 ];
 
 const specialFilters = [
@@ -65,7 +66,7 @@ export function MobileInventorySlider() {
 
   const getItemStatus = (item: InventoryItem): ItemStatus => {
     if (item.returned) return 'returned';
-    if (item.verified) return 'verified';
+    if (item.verified) return 'assigned';
     if ((item.received || 0) >= item.requested) return 'complete';
     return 'missing';
   };
@@ -211,7 +212,7 @@ export function MobileInventorySlider() {
     const variants = {
       missing: "status-missing",
       complete: "status-complete", 
-      verified: "status-verified",
+      assigned: "status-verified",
       returned: "status-returned"
     };
 
@@ -234,7 +235,7 @@ export function MobileInventorySlider() {
           </span>
         </div>
       );
-    } else if (status === 'verified') {
+    } else if (status === 'assigned') {
       return (
         <div className="flex flex-col gap-3">
           <Button
@@ -445,7 +446,7 @@ export function MobileInventorySlider() {
         {/* Item Details Card */}
         <div className={`rounded-lg p-4 space-y-3 border-2 ${
           status === 'returned' ? 'bg-green-950/30 border-green-600/50' :
-          status === 'verified' ? 'bg-blue-950/30 border-blue-600/50' :
+          status === 'assigned' ? 'bg-blue-950/30 border-blue-600/50' :
           status === 'complete' ? 'bg-emerald-950/30 border-emerald-600/50' :
           'bg-red-950/30 border-red-600/50'
         }`}>

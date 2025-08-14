@@ -27,7 +27,7 @@ export interface RequestItem {
   timestamp: number;
 }
 
-export type ItemStatus = 'missing' | 'complete' | 'verified' | 'returned';
+export type ItemStatus = 'missing' | 'complete' | 'assigned' | 'returned';
 
 export interface StatusFilter {
   status: ItemStatus | null;
