@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { database } from "@/lib/firebase";
+import { ref, set, onValue } from "firebase/database";
 
 const AUTH_STORAGE_KEY = "aesa_admin_auth";
 const EVENT_NAME_STORAGE_KEY = "aesa_event_name";
@@ -53,15 +55,27 @@ export function useEventName() {
   const [eventName, setEventName] = useState("Event");
 
   useEffect(() => {
-    const stored = localStorage.getItem(EVENT_NAME_STORAGE_KEY);
-    if (stored) {
-      setEventName(stored);
-    }
+    // Listen for changes from Firebase only
+    const eventNameRef = ref(database, "settings/eventName");
+    const unsubscribe = onValue(eventNameRef, (snapshot) => {
+      const firebaseEventName = snapshot.val();
+      if (firebaseEventName) {
+        setEventName(firebaseEventName);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const updateEventName = (name: string) => {
+  const updateEventName = async (name: string) => {
     setEventName(name);
-    localStorage.setItem(EVENT_NAME_STORAGE_KEY, name);
+    
+    // Save to Firebase only
+    try {
+      await set(ref(database, "settings/eventName"), name);
+    } catch (error) {
+      console.error("Error saving event name to Firebase:", error);
+    }
   };
 
   return {

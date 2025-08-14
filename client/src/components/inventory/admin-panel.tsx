@@ -226,7 +226,7 @@ export function AdminPanel() {
     });
   };
 
-  const handleEventPasswordSubmit = () => {
+  const handleEventPasswordSubmit = async () => {
     if (enteredPassword === "Ku2023!@") {
       if (!newEventPassword.trim()) {
         toast({
@@ -237,12 +237,22 @@ export function AdminPanel() {
         return;
       }
 
-      // Here you would normally save the new event password to your backend
-      // For now, we'll just show a success message
-      toast({
-        title: "Event Password Changed",
-        description: "The event password has been updated successfully.",
-      });
+      // Save the new event password to Firebase
+      try {
+        await set(ref(database, "settings/eventPassword"), newEventPassword.trim());
+        toast({
+          title: "Event Password Changed",
+          description: "The event password has been updated successfully.",
+        });
+      } catch (error) {
+        console.error("Error saving event password:", error);
+        toast({
+          title: "Error",
+          description: "Failed to save event password. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
       
       setShowEventPasswordDialog(false);
       setEnteredPassword("");

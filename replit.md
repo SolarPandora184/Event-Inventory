@@ -8,6 +8,15 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes (August 14, 2025)
 
+## Project Migration and Firebase Storage Enhancement
+- **Complete Migration**: Successfully migrated from Replit Agent to standard Replit environment
+- **Firebase Storage Centralization**: Event name and event password now save to Firebase instead of localStorage
+- **Storage Policy**: Only authentication cookies use localStorage; all settings stored in Firebase for real-time sync
+- **Footer Enhancement**: Added message about system availability for other events
+- **Data Persistence**: Event settings persist across sessions and sync in real-time between admin changes
+
+# Previous Changes
+
 ## Comprehensive Survey System Implementation
 - **Survey Toggle Control**: Admin panel switch to enable/disable survey button in header
 - **Survey Dialog**: Complete survey form with user type dropdown (Event Senior Staff, Event Participant, Requestor Only)
