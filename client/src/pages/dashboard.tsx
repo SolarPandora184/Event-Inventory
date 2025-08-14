@@ -142,6 +142,24 @@ export default function Dashboard() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Tech Support Footer - Subtle and unobtrusive */}
+      <footer className="border-t border-border bg-card/30 mt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="text-center text-xs text-muted-foreground">
+            <span className="opacity-70">
+              Tech Support & Owner: C/CMSgt Kendrick Uhles • (661) 381-3184 • 
+              <a 
+                href="mailto:Kendrick.Uhles@CawgCap.org" 
+                className="hover:text-aesa-accent transition-colors ml-1"
+                data-testid="support-email"
+              >
+                Kendrick.Uhles@CawgCap.org
+              </a>
+            </span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
