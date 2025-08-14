@@ -16,7 +16,8 @@ import {
   Plus,
   Edit3,
   Trash2,
-  Undo2
+  Undo2,
+  Minus
 } from "lucide-react";
 import type { InventoryItem, ItemStatus } from "@/types/inventory";
 
@@ -37,6 +38,7 @@ export function InventoryTable() {
   const [items, setItems] = useState<Record<string, InventoryItem>>({});
   const [currentFilter, setCurrentFilter] = useState<ItemStatus | null>(null);
   const [receivedQuantities, setReceivedQuantities] = useState<Record<string, number>>({});
+  const [missingQuantities, setMissingQuantities] = useState<Record<string, number>>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -119,6 +121,33 @@ export function InventoryTable() {
       toast({
         title: "Error",
         description: "Failed to mark item as returned.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const confirmMissing = async (key: string) => {
+    const quantity = missingQuantities[key];
+    if (quantity === undefined || quantity < 0) {
+      toast({
+        title: "Invalid Quantity",
+        description: "Please enter a valid missing quantity.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await update(ref(database, `inventory/${key}`), { missing: quantity });
+      setMissingQuantities(prev => ({ ...prev, [key]: 0 }));
+      toast({
+        title: "Updated",
+        description: "Missing quantity updated successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update missing quantity.",
         variant: "destructive",
       });
     }
@@ -210,10 +239,10 @@ export function InventoryTable() {
 
   const exportInventory = () => {
     const csvContent = "data:text/csv;charset=utf-8," +
-      "Item Name,Requested,On Hand,Received,Custodian,Location,Email,Phone,Expendable,Status\n" +
+      "Item Name,Requested,On Hand,Received,Missing,Custodian,Location,Email,Phone,Expendable,Status\n" +
       Object.values(items).map(item => {
         const status = getItemStatus(item);
-        return `"${item.itemName}",${item.requested},${item.onHand || 0},${item.received || 0},"${item.custodian || ''}","${item.location || ''}","${item.email || ''}","${item.phone || ''}",${item.expendable ? 'Yes' : 'No'},"${status}"`;
+        return `"${item.itemName}",${item.requested},${item.onHand || 0},${item.received || 0},${item.missing || 0},"${item.custodian || ''}","${item.location || ''}","${item.email || ''}","${item.phone || ''}",${item.expendable ? 'Yes' : 'No'},"${status}"`;
       }).join("\n");
 
     const encodedUri = encodeURI(csvContent);
@@ -254,15 +283,40 @@ export function InventoryTable() {
       );
     } else if (status === 'verified') {
       primaryAction = (
-        <Button
-          size="sm"
-          onClick={() => markReturned(key)}
-          data-testid={`button-mark-returned-${key}`}
-          className="bg-status-returned hover:bg-opacity-80 text-white"
-        >
-          <Undo2 className="mr-1 h-4 w-4" />
-          Mark Returned
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            onClick={() => markReturned(key)}
+            data-testid={`button-mark-returned-${key}`}
+            className="bg-status-returned hover:bg-opacity-80 text-white"
+          >
+            <Undo2 className="mr-1 h-4 w-4" />
+            Mark Returned
+          </Button>
+          <div className="flex items-center gap-1">
+            <Input
+              type="number"
+              min="0"
+              placeholder="Missing"
+              value={missingQuantities[key] || ''}
+              onChange={(e) => setMissingQuantities(prev => ({ 
+                ...prev, 
+                [key]: parseInt(e.target.value) || 0 
+              }))}
+              data-testid={`input-missing-${key}`}
+              className="w-20 h-8 bg-input border-border text-text-primary"
+            />
+            <Button
+              size="sm"
+              onClick={() => confirmMissing(key)}
+              data-testid={`button-mark-missing-${key}`}
+              className="bg-status-missing hover:bg-opacity-80 text-white"
+            >
+              <Minus className="mr-1 h-4 w-4" />
+              Missing
+            </Button>
+          </div>
+        </div>
       );
     } else if (status === 'complete') {
       primaryAction = (
@@ -383,6 +437,7 @@ export function InventoryTable() {
                 <TableHead className="text-text-primary">Requested</TableHead>
                 <TableHead className="text-text-primary">On Hand</TableHead>
                 <TableHead className="text-text-primary">Received</TableHead>
+                <TableHead className="text-text-primary">Missing</TableHead>
                 <TableHead className="text-text-primary">Custodian</TableHead>
                 <TableHead className="text-text-primary">Location</TableHead>
                 <TableHead className="text-text-primary">Contact</TableHead>
@@ -411,6 +466,9 @@ export function InventoryTable() {
                     {item.received || 0}
                   </TableCell>
                   <TableCell className="text-text-secondary">
+                    {item.missing || 0}
+                  </TableCell>
+                  <TableCell className="text-text-secondary">
                     {item.custodian || ''}
                   </TableCell>
                   <TableCell className="text-text-secondary">
@@ -435,7 +493,7 @@ export function InventoryTable() {
               ))}
               {filteredItems.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center py-8 text-text-muted">
+                  <TableCell colSpan={11} className="text-center py-8 text-text-muted">
                     No inventory items found.
                   </TableCell>
                 </TableRow>

@@ -4,6 +4,7 @@ export interface InventoryItem {
   requested: number;
   onHand?: number;
   received?: number;
+  missing?: number;
   verified?: boolean;
   returned?: boolean;
   custodian: string;
