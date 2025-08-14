@@ -334,22 +334,14 @@ export function AdminPanel() {
 
       <Card className="bg-card border-border" data-testid="admin-panel-card">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-2xl font-bold text-text-primary flex items-center">
-                <Settings className="mr-2 h-6 w-6" />
-                Admin Panel
-              </CardTitle>
-              <CardDescription className="text-text-secondary mt-1">
-                Add items manually and manage system settings
-              </CardDescription>
-            </div>
-            <div className="bg-yellow-900/20 border border-yellow-500/20 rounded-lg px-4 py-2">
-              <span className="text-yellow-400 text-sm">
-                <AlertTriangle className="inline mr-2 h-4 w-4" />
-                Admin Access Required
-              </span>
-            </div>
+          <div>
+            <CardTitle className="text-2xl font-bold text-text-primary flex items-center">
+              <Settings className="mr-2 h-6 w-6" />
+              Admin Panel
+            </CardTitle>
+            <CardDescription className="text-text-secondary mt-1">
+              Add items manually and manage system settings
+            </CardDescription>
           </div>
         </CardHeader>
 
