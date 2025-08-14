@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from "@/hooks/use-toast";
 import { useEventName } from "@/hooks/use-auth";
 import { database } from "@/lib/firebase";
-import { ref, push, set, remove, get } from "firebase/database";
+import { ref, push, set, remove, get, onValue } from "firebase/database";
 import { Settings, Plus, Trash, AlertTriangle, Save, Calendar, ClipboardList } from "lucide-react";
 import type { InventoryItem } from "@/types/inventory";
 
@@ -38,8 +38,23 @@ export function AdminPanel() {
   const [enteredPassword, setEnteredPassword] = useState("");
   const [newEventPassword, setNewEventPassword] = useState("");
   const [surveyEnabled, setSurveyEnabled] = useState(false);
+  const [passwordRequired, setPasswordRequired] = useState(true);
+  const [showPasswordToggleDialog, setShowPasswordToggleDialog] = useState(false);
+  const [showExportPasswordDialog, setShowExportPasswordDialog] = useState(false);
+  const [masterPasswordForToggle, setMasterPasswordForToggle] = useState("");
+  const [masterPasswordForExport, setMasterPasswordForExport] = useState("");
   const { toast } = useToast();
   const { eventName, updateEventName } = useEventName();
+
+  useEffect(() => {
+    // Load password requirement setting
+    const passwordRef = ref(database, "settings/passwordRequired");
+    const unsubscribe = onValue(passwordRef, (snapshot) => {
+      setPasswordRequired(snapshot.val() ?? true);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const form = useForm<AdminFormData>({
     resolver: zodResolver(adminSchema),
@@ -255,6 +270,48 @@ export function AdminPanel() {
     }
   };
 
+  const handlePasswordToggle = () => {
+    if (masterPasswordForToggle !== "Ku2023!@") {
+      toast({
+        title: "Access Denied",
+        description: "Incorrect master password.",
+        variant: "destructive",
+      });
+      setMasterPasswordForToggle("");
+      return;
+    }
+
+    const newState = !passwordRequired;
+    setPasswordRequired(newState);
+    
+    // Save password requirement state to Firebase
+    set(ref(database, "settings/passwordRequired"), newState);
+    
+    toast({
+      title: passwordRequired ? "Password Protection Disabled" : "Password Protection Enabled",
+      description: passwordRequired ? "Event password is no longer required" : "Event password is now required",
+    });
+    
+    setShowPasswordToggleDialog(false);
+    setMasterPasswordForToggle("");
+  };
+
+  const handleExportWithPassword = () => {
+    if (masterPasswordForExport !== "Ku2023!@") {
+      toast({
+        title: "Access Denied",
+        description: "Incorrect master password.",
+        variant: "destructive",
+      });
+      setMasterPasswordForExport("");
+      return;
+    }
+
+    setShowExportPasswordDialog(false);
+    setMasterPasswordForExport("");
+    exportSurveyData();
+  };
+
   const exportSurveyData = async () => {
     try {
       const snapshot = await get(ref(database, "surveys"));
@@ -446,18 +503,140 @@ export function AdminPanel() {
                 When enabled, a survey button will appear in the header for all users
               </p>
             </div>
-            <Button
-              onClick={exportSurveyData}
-              variant="outline"
-              data-testid="button-export-survey"
-              className="border-blue-500 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950"
-            >
-              <Save className="mr-2 h-4 w-4" />
-              Export Survey Data
-            </Button>
+            <Dialog open={showExportPasswordDialog} onOpenChange={setShowExportPasswordDialog}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  data-testid="button-export-survey"
+                  className="border-blue-500 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950"
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  Export Survey Data
+                </Button>
+              </DialogTrigger>
+              <DialogContent data-testid="dialog-export-password">
+                <DialogHeader>
+                  <DialogTitle className="text-blue-600">Master Password Required</DialogTitle>
+                  <DialogDescription>
+                    Enter the master password to export survey data.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <Label htmlFor="master-password-export">Master Password</Label>
+                  <Input
+                    id="master-password-export"
+                    type="password"
+                    value={masterPasswordForExport}
+                    onChange={(e) => setMasterPasswordForExport(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleExportWithPassword()}
+                    data-testid="input-master-password-export"
+                    placeholder="Enter master password"
+                    className="w-full"
+                  />
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowExportPasswordDialog(false);
+                      setMasterPasswordForExport("");
+                    }}
+                    data-testid="button-cancel-export"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleExportWithPassword}
+                    disabled={!masterPasswordForExport}
+                    data-testid="button-confirm-export"
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    Export Data
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardContent>
       </Card>
+
+      {/* Password Settings */}
+      <Card className="bg-card border-border" data-testid="password-settings-card">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold text-text-primary flex items-center">
+            <Settings className="mr-2 h-5 w-5" />
+            Password Settings
+          </CardTitle>
+          <CardDescription className="text-text-secondary">
+            Control event password requirements (master password required to change)
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center space-x-3">
+                <Switch
+                  id="password-toggle"
+                  checked={passwordRequired}
+                  onCheckedChange={() => setShowPasswordToggleDialog(true)}
+                  data-testid="switch-password-toggle"
+                />
+                <Label htmlFor="password-toggle" className="text-sm font-medium text-text-primary">
+                  Require Event Password
+                </Label>
+              </div>
+              <p className="text-xs text-text-muted">
+                When enabled, users must enter event password to access protected tabs
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Password Toggle Dialog */}
+      <Dialog open={showPasswordToggleDialog} onOpenChange={setShowPasswordToggleDialog}>
+        <DialogContent data-testid="dialog-password-toggle">
+          <DialogHeader>
+            <DialogTitle className="text-orange-600">Master Password Required</DialogTitle>
+            <DialogDescription>
+              Enter the master password to {passwordRequired ? "disable" : "enable"} event password requirement.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Label htmlFor="master-password-toggle">Master Password</Label>
+            <Input
+              id="master-password-toggle"
+              type="password"
+              value={masterPasswordForToggle}
+              onChange={(e) => setMasterPasswordForToggle(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handlePasswordToggle()}
+              data-testid="input-master-password-toggle"
+              placeholder="Enter master password"
+              className="w-full"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowPasswordToggleDialog(false);
+                setMasterPasswordForToggle("");
+              }}
+              data-testid="button-cancel-toggle"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handlePasswordToggle}
+              disabled={!masterPasswordForToggle}
+              data-testid="button-confirm-toggle"
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              {passwordRequired ? "Disable" : "Enable"} Password
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Card className="bg-card border-border" data-testid="admin-panel-card">
         <CardHeader>

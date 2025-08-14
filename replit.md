@@ -8,6 +8,21 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes (August 14, 2025)
 
+## Comprehensive Survey System Implementation
+- **Survey Toggle Control**: Admin panel switch to enable/disable survey button in header
+- **Survey Dialog**: Complete survey form with user type dropdown (Event Senior Staff, Event Participant, Requestor Only)
+- **Survey Questions**: "Would use again", "Prefer over Excel spreadsheet", and open feedback textbox
+- **CSV Export**: Master password-protected export functionality for survey responses with timestamps
+- **Data Management**: Survey data automatically cleared during inventory reset operations
+- **Firebase Integration**: Real-time survey settings and response storage
+
+## Advanced Password Management System
+- **Password Toggle Switch**: Admin control to enable/disable event password requirement
+- **Master Password Protection**: All password changes require master password "Ku2023!@" authentication
+- **Conditional Authentication**: Users only prompted for event password when requirement is enabled
+- **Dual Security Layers**: Master password protects system settings, event password controls user access
+- **Export Security**: Survey data export requires master password verification
+
 ## Enhanced Toast Notification System
 - **Maximum Popup Limit**: Implemented 3-popup maximum display with automatic removal of oldest notifications
 - **Auto-Dismiss Timer**: Added 5-second auto-dismiss functionality for all toast notifications  
@@ -20,12 +35,6 @@ Preferred communication style: Simple, everyday language.
 - **Streamlined Build Process**: Replaced complex Node.js build script with simple bash script
 - **Simplified Documentation**: Condensed deployment guide to essential steps only
 - **Cleaner Setup**: Removed unnecessary complexity while maintaining functionality
-
-## Security Enhancements
-- **Master Password Protection**: Added security dialog for reset inventory function with password "Ku2023!@"
-- **Event Password Management**: Added "Change Event Password" button requiring master password authentication
-- **Enhanced Security**: Reset button now requires master password confirmation before allowing destructive operations
-- **Undo Functionality**: Reset operations include undo capability for reversible operations
 
 # System Architecture
 

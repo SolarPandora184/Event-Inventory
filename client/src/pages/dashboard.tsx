@@ -25,6 +25,7 @@ export default function Dashboard() {
   const [useMobileView, setUseMobileView] = useState(false);
   const [surveyEnabled, setSurveyEnabled] = useState(false);
   const [showSurvey, setShowSurvey] = useState(false);
+  const [passwordRequired, setPasswordRequired] = useState(true);
 
   const { isAuthenticated, showCookieConsent, authenticate, acceptCookies, declineCookies } = useAuth();
   const { eventName } = useEventName();
@@ -46,16 +47,25 @@ export default function Dashboard() {
   useEffect(() => {
     // Listen to survey settings
     const surveyRef = ref(database, "surveySettings/enabled");
-    const unsubscribe = onValue(surveyRef, (snapshot) => {
+    const unsubscribeSurvey = onValue(surveyRef, (snapshot) => {
       setSurveyEnabled(snapshot.val() || false);
     });
 
-    return () => unsubscribe();
+    // Listen to password requirement settings
+    const passwordRef = ref(database, "settings/passwordRequired");
+    const unsubscribePassword = onValue(passwordRef, (snapshot) => {
+      setPasswordRequired(snapshot.val() ?? true);
+    });
+
+    return () => {
+      unsubscribeSurvey();
+      unsubscribePassword();
+    };
   }, []);
 
   const handleTabChange = (value: string) => {
-    if (value !== "request" && !isAuthenticated) {
-      // Show password prompt for protected tabs
+    if (value !== "request" && !isAuthenticated && passwordRequired) {
+      // Show password prompt for protected tabs only if password is required
       setPendingTab(value);
       setShowPasswordPrompt(true);
       return;
