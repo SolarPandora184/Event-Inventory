@@ -1,95 +1,41 @@
-# GitHub Pages Deployment Guide
+# GitHub Pages Deployment
 
-This guide explains how to deploy the AESA Squadron 72 Inventory Management System to GitHub Pages.
+Simple setup for hosting the AESA Squadron 72 Inventory Management System on GitHub Pages.
 
-## Quick Setup
+## Quick Deployment
 
-The repository now includes the necessary files for GitHub Pages deployment:
+1. **Build for GitHub Pages**:
+   ```bash
+   ./build-github-pages.js
+   ```
 
-- `index.html` - Main page with corrected asset paths
-- `404.html` - Handles client-side routing for single-page app
-- `assets/` - CSS and JavaScript files
+2. **Push to GitHub**:
+   ```bash
+   git add index.html 404.html assets/
+   git commit -m "Deploy to GitHub Pages"
+   git push
+   ```
 
-## Deployment Steps
-
-1. **Push to GitHub**: Commit and push all files to your GitHub repository
-2. **Enable GitHub Pages**: 
-   - Go to your repository settings
-   - Scroll to "Pages" section
-   - Select "Deploy from a branch"
+3. **Enable GitHub Pages**:
+   - Go to your repository Settings > Pages
+   - Select "Deploy from a branch" 
    - Choose "main" branch and "/ (root)" folder
    - Click "Save"
 
-## Manual Build Process
+## What the build script does
 
-If you need to rebuild the static files:
+The `build-github-pages.js` script:
+- Builds the app with `npm run build`
+- Copies `index.html` to root with relative asset paths
+- Creates `404.html` for client-side routing
+- Copies the `assets/` folder to root
 
-1. Run the build command:
-   ```bash
-   npm run build
-   ```
+## Files created
 
-2. Copy the built files to the root:
-   ```bash
-   # Copy the built index.html and modify asset paths
-   cp dist/public/index.html ./index.html
-   
-   # Update asset paths in index.html from "/assets/" to "./assets/"
-   sed -i 's|src="/assets/|src="./assets/|g' index.html
-   sed -i 's|href="/assets/|href="./assets/|g' index.html
-   
-   # Copy the 404.html for SPA routing
-   cp index.html 404.html
-   
-   # Copy assets directory
-   cp -r dist/public/assets .
-   ```
+- `index.html` - Main page
+- `404.html` - Handles routing for single-page app
+- `assets/` - CSS and JavaScript files
 
-3. Commit and push the updated files
+## That's it!
 
-## Files for GitHub Pages
-
-- `index.html` - Entry point with relative asset paths
-- `404.html` - Handles client-side routing (same as index.html)
-- `assets/index-[hash].js` - Main JavaScript bundle
-- `assets/index-[hash].css` - Compiled CSS styles
-
-## Important Notes
-
-- The app is configured as a Single Page Application (SPA)
-- Client-side routing is handled by the 404.html file
-- All asset paths use relative URLs (`./assets/`) for GitHub Pages compatibility
-- The app will work offline once loaded since it's a static build
-
-## What The Error "Did you forget to add the page to the router" Means
-
-This error message appears when:
-1. You're trying to access a direct URL (like `/admin` or `/inventory`) on GitHub Pages
-2. GitHub Pages serves the 404.html file instead of letting React handle the routing
-3. The app shows the "404 Page Not Found" component from the NotFound page
-
-This is **normal behavior** that gets fixed once you deploy to GitHub Pages with the proper routing setup.
-
-## How The Fix Works
-
-The setup includes:
-1. **404.html** - Automatically redirects failed routes back to the main app
-2. **Route handling in main.tsx** - Restores the original URL after redirect
-3. **Relative asset paths** - Ensures CSS and JavaScript load properly
-
-## Troubleshooting
-
-If you see "Did you forget to add the page to the router":
-1. This is expected when testing locally with direct URL access
-2. The error will disappear once deployed to GitHub Pages
-3. Make sure you push both `index.html` and `404.html` to your repository
-
-If you see 404 errors on GitHub Pages:
-1. Ensure all files are in the repository root
-2. Check that GitHub Pages is enabled and pointing to the main branch
-3. Verify asset paths are relative (start with `./`)
-
-If routing doesn't work after deployment:
-1. Ensure 404.html exists and has the redirect script
-2. Check that the GitHub Pages URL is using HTTPS
-3. Wait a few minutes for GitHub Pages to update after pushing changes
+Your app will be available at `https://yourusername.github.io/repository-name/`

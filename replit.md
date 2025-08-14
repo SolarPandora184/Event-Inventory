@@ -10,11 +10,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Enhanced Toast Notification System
 - **Maximum Popup Limit**: Implemented 3-popup maximum display with automatic removal of oldest notifications
-- **Auto-Dismiss Timer**: Added 5-second auto-dismiss functionality for all toast notifications
+- **Auto-Dismiss Timer**: Added 5-second auto-dismiss functionality for all toast notifications  
 - **Undo Functionality**: Enhanced toasts with undo button capability for reversible actions
-- **Improved UX**: Added ToastDemo component for testing new features with comprehensive examples
 - **Real Actions**: Updated inventory and request forms to include undo functionality with actual database operations
 - **Better Management**: Implemented proper timeout cleanup and toast lifecycle management
+- **Bug Fixes**: Fixed React prop warnings by filtering DOM-incompatible props
+
+## Simplified GitHub Pages Hosting
+- **Streamlined Build Process**: Replaced complex Node.js build script with simple bash script
+- **Simplified Documentation**: Condensed deployment guide to essential steps only
+- **Cleaner Setup**: Removed unnecessary complexity while maintaining functionality
 
 # System Architecture
 

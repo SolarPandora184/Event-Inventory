@@ -7,16 +7,15 @@ import { AdminPanel } from "@/components/inventory/admin-panel";
 import { PendingRequests } from "@/components/inventory/pending-requests";
 import { PasswordPrompt } from "@/components/auth/password-prompt";
 import { CookieConsent } from "@/components/auth/cookie-consent";
-import { ToastDemo } from "@/components/toast-demo";
+
 import { useAuth, useEventName } from "@/hooks/use-auth";
-import { Shield, Plus, Package, Settings, Clock, Bell } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Shield, Plus, Package, Settings, Clock } from "lucide-react";
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("request");
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [pendingTab, setPendingTab] = useState<string | null>(null);
-  const [showToastDemo, setShowToastDemo] = useState(false);
+
   const { isAuthenticated, showCookieConsent, authenticate, acceptCookies, declineCookies } = useAuth();
   const { eventName } = useEventName();
 
@@ -70,16 +69,6 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowToastDemo(!showToastDemo)}
-                className="hidden sm:flex items-center space-x-2"
-                data-testid="button-toast-demo"
-              >
-                <Bell className="h-4 w-4" />
-                <span>Toast Demo</span>
-              </Button>
               <div className="hidden sm:flex items-center space-x-2 bg-secondary px-3 py-2 rounded-lg">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <span className="text-sm text-text-secondary">System Online</span>
@@ -96,12 +85,6 @@ export default function Dashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {showToastDemo && (
-          <div className="mb-6">
-            <ToastDemo />
-          </div>
-        )}
-        
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6" data-testid="main-tabs">
           <TabsList className="grid w-full grid-cols-4 bg-secondary">
             <TabsTrigger 
