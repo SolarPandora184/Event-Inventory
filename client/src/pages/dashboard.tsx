@@ -10,12 +10,15 @@ import { PasswordPrompt } from "@/components/auth/password-prompt";
 import { CookieConsent } from "@/components/auth/cookie-consent";
 
 import { useAuth, useEventName } from "@/hooks/use-auth";
-import { Shield, Plus, Package, Settings, Clock } from "lucide-react";
+import { Shield, Plus, Package, Settings, Clock, Smartphone, Monitor } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("request");
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [pendingTab, setPendingTab] = useState<string | null>(null);
+  const [useMobileView, setUseMobileView] = useState(false);
 
   const { isAuthenticated, showCookieConsent, authenticate, acceptCookies, declineCookies } = useAuth();
   const { eventName } = useEventName();
@@ -131,11 +134,28 @@ export default function Dashboard() {
           </TabsContent>
 
           <TabsContent value="inventory" data-testid="tab-content-inventory">
-            <div className="block sm:hidden">
-              <MobileInventorySlider />
-            </div>
-            <div className="hidden sm:block">
-              <InventoryTable />
+            <div className="space-y-4">
+              {useMobileView ? <MobileInventorySlider /> : <InventoryTable />}
+              
+              {/* View Toggle Switch */}
+              <div className="flex items-center justify-center py-3 border-t border-border">
+                <div className="flex items-center space-x-3 bg-secondary/30 px-4 py-2 rounded-lg">
+                  <Monitor className="h-4 w-4 text-text-muted" />
+                  <Label htmlFor="view-toggle" className="text-sm text-text-secondary cursor-pointer">
+                    Desktop
+                  </Label>
+                  <Switch
+                    id="view-toggle"
+                    checked={useMobileView}
+                    onCheckedChange={setUseMobileView}
+                    data-testid="view-toggle-switch"
+                  />
+                  <Label htmlFor="view-toggle" className="text-sm text-text-secondary cursor-pointer">
+                    Mobile
+                  </Label>
+                  <Smartphone className="h-4 w-4 text-text-muted" />
+                </div>
+              </div>
             </div>
           </TabsContent>
 
