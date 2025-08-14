@@ -21,14 +21,10 @@ Preferred communication style: Simple, everyday language.
 - **Simplified Documentation**: Condensed deployment guide to essential steps only
 - **Cleaner Setup**: Removed unnecessary complexity while maintaining functionality
 
-## Test Functionality & Security Enhancements
-- **Test Button Added**: Implemented "Add 10 Test Items" button for testing toast notification system
-- **Test Cleanup**: Added "Remove Test Items" button to clean up test data with smart detection
-- **Realistic Test Data**: Button generates 10 realistic military equipment entries with random data
-- **Smart Test Detection**: Remove function identifies test items by custodian, email, and phone patterns
-- **Master Password Protection**: Added security dialog for reset inventory function with password "Ku2023!@"
+## Security Enhancements
+- **Master Password Protection**: Added security dialog for reset inventory function with password "AESA2025!"
 - **Enhanced Security**: Reset button now requires master password confirmation before allowing destructive operations
-- **Undo Functionality**: Both test buttons include undo capability for reversible operations
+- **Undo Functionality**: Reset operations include undo capability for reversible operations
 
 # System Architecture
 
