@@ -32,7 +32,7 @@ interface FilterButton {
 
 const filterButtons: FilterButton[] = [
   { status: 'missing', label: 'Missing', icon: <AlertTriangle className="mr-2 h-4 w-4" />, color: 'border-status-missing text-status-missing hover:bg-status-missing' },
-  { status: 'complete', label: 'Complete', icon: <CheckCircle className="mr-2 h-4 w-4" />, color: 'border-status-complete text-status-complete hover:bg-status-complete' },
+  { status: 'received', label: 'Received', icon: <CheckCircle className="mr-2 h-4 w-4" />, color: 'border-status-complete text-status-complete hover:bg-status-complete' },
   { status: 'assigned', label: 'Assigned', icon: <Shield className="mr-2 h-4 w-4" />, color: 'border-status-verified text-status-verified hover:bg-status-verified' },
   { status: 'returned', label: 'Returned', icon: <Undo2 className="mr-2 h-4 w-4" />, color: 'border-status-returned text-status-returned hover:bg-status-returned' },
 ];
@@ -64,7 +64,7 @@ export function InventoryTable() {
   const getItemStatus = (item: InventoryItem): ItemStatus => {
     if (item.returned) return 'returned';
     if (item.verified) return 'assigned';
-    if ((item.received || 0) >= item.requested) return 'complete';
+    if ((item.received || 0) >= item.requested) return 'received';
     return 'missing';
   };
 
@@ -286,7 +286,7 @@ export function InventoryTable() {
   const getStatusBadge = (status: ItemStatus) => {
     const variants = {
       missing: "status-missing",
-      complete: "status-complete", 
+      received: "status-complete", 
       assigned: "status-verified",
       returned: "status-returned"
     };
@@ -384,7 +384,7 @@ export function InventoryTable() {
           </Dialog>
         </div>
       );
-    } else if (status === 'complete') {
+    } else if (status === 'received') {
       primaryAction = (
         <Button
           size="sm"
@@ -535,7 +535,7 @@ export function InventoryTable() {
                   className={`border-border transition-colors ${
                     getItemStatus(item) === 'returned' ? 'bg-green-950/20 hover:bg-green-950/30 border-green-600/30' :
                     getItemStatus(item) === 'assigned' ? 'bg-blue-950/20 hover:bg-blue-950/30 border-blue-600/30' :
-                    getItemStatus(item) === 'complete' ? 'bg-emerald-950/20 hover:bg-emerald-950/30 border-emerald-600/30' :
+                    getItemStatus(item) === 'received' ? 'bg-emerald-950/20 hover:bg-emerald-950/30 border-emerald-600/30' :
                     'bg-red-950/20 hover:bg-red-950/30 border-red-600/30'
                   }`}
                 >
