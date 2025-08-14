@@ -5,6 +5,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -12,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useEventName } from "@/hooks/use-auth";
 import { database } from "@/lib/firebase";
 import { ref, push, set, remove, get } from "firebase/database";
-import { Settings, Plus, Trash, AlertTriangle, Save, Calendar } from "lucide-react";
+import { Settings, Plus, Trash, AlertTriangle, Save, Calendar, ClipboardList } from "lucide-react";
 import type { InventoryItem } from "@/types/inventory";
 
 const adminSchema = z.object({
@@ -36,6 +37,7 @@ export function AdminPanel() {
   const [showEventPasswordDialog, setShowEventPasswordDialog] = useState(false);
   const [enteredPassword, setEnteredPassword] = useState("");
   const [newEventPassword, setNewEventPassword] = useState("");
+  const [surveyEnabled, setSurveyEnabled] = useState(false);
   const { toast } = useToast();
   const { eventName, updateEventName } = useEventName();
 
