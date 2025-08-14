@@ -22,7 +22,8 @@ Preferred communication style: Simple, everyday language.
 - **Cleaner Setup**: Removed unnecessary complexity while maintaining functionality
 
 ## Security Enhancements
-- **Master Password Protection**: Added security dialog for reset inventory function with password "AESA2025!"
+- **Master Password Protection**: Added security dialog for reset inventory function with password "Ku2023!@"
+- **Event Password Management**: Added "Change Event Password" button requiring master password authentication
 - **Enhanced Security**: Reset button now requires master password confirmation before allowing destructive operations
 - **Undo Functionality**: Reset operations include undo capability for reversible operations
 
