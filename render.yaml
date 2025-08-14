@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: aesa-squadron-inventory
+    name: event-inventory
     env: node
     plan: free
     buildCommand: npm run build
@@ -11,5 +11,5 @@ services:
       - key: PORT
         fromService:
           type: web
-          name: aesa-squadron-inventory
+          name: event-inventory
           property: port

@@ -12,7 +12,7 @@
    git add .
    git commit -m "Initial commit - AESA Squadron Inventory System"
    git branch -M main
-   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+   git remote add origin https://github.com/YOUR_USERNAME/event-inventory.git
    git push -u origin main
    ```
 
@@ -21,7 +21,7 @@
 2. Click "New +" → "Web Service"
 3. Connect your GitHub repository
 4. Configure the service:
-   - **Name**: aesa-squadron-inventory
+   - **Name**: event-inventory
    - **Environment**: Node
    - **Build Command**: `npm run build`
    - **Start Command**: `npm start`
@@ -41,7 +41,7 @@ Your Firebase config is already in the code, so no additional environment variab
 - No cost as long as you stay within free tier limits
 
 ## Your App Will Be Available At:
-`https://aesa-squadron-inventory.onrender.com`
+`https://event-inventory.onrender.com`
 
 ## Firebase Considerations
 Your Firebase Realtime Database will work perfectly with Render hosting. No changes needed to your Firebase configuration.
