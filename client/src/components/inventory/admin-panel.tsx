@@ -249,6 +249,80 @@ export function AdminPanel() {
     }
   };
 
+  const removeTestEntries = async () => {
+    setIsSubmitting(true);
+    const removedItems: any[] = [];
+    
+    try {
+      // Get all inventory items
+      const snapshot = await get(ref(database, "inventory"));
+      const inventoryData = snapshot.val();
+      
+      if (!inventoryData) {
+        toast({
+          title: "No Items Found",
+          description: "No inventory items to remove.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Filter test items (items with test patterns)
+      const testItemKeys: string[] = [];
+      Object.entries(inventoryData).forEach(([key, item]: [string, any]) => {
+        if (item.custodian?.startsWith("Test User") || 
+            item.email?.includes("@squadron72.mil") ||
+            item.phone?.startsWith("555-010")) {
+          testItemKeys.push(key);
+          removedItems.push({ key, data: item });
+        }
+      });
+
+      if (testItemKeys.length === 0) {
+        toast({
+          title: "No Test Items",
+          description: "No test items found to remove.",
+        });
+        return;
+      }
+
+      // Remove test items
+      await Promise.all(testItemKeys.map(key => remove(ref(database, `inventory/${key}`))));
+
+      toast({
+        title: "Test Items Removed",
+        description: `${testItemKeys.length} test items have been removed successfully.`,
+        undoAction: async () => {
+          try {
+            await Promise.all(removedItems.map(({ key, data }) => 
+              set(ref(database, `inventory/${key}`), data)
+            ));
+            toast({
+              title: "Test Items Restored",
+              description: "All test items have been restored.",
+            });
+          } catch (error) {
+            console.error("Error restoring test items:", error);
+            toast({
+              title: "Error",
+              description: "Failed to restore test items.",
+              variant: "destructive",
+            });
+          }
+        },
+      });
+    } catch (error) {
+      console.error("Error removing test items:", error);
+      toast({
+        title: "Error",
+        description: "Failed to remove test items. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Event Name Configuration */}
@@ -513,6 +587,17 @@ export function AdminPanel() {
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Add 10 Test Items
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={removeTestEntries}
+                  disabled={isSubmitting}
+                  data-testid="button-remove-test-entries"
+                  className="border-orange-500 text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-950"
+                >
+                  <Trash className="mr-2 h-4 w-4" />
+                  Remove Test Items
                 </Button>
               </div>
               <Button
