@@ -4,6 +4,7 @@ import os
 from datetime import datetime
 import json
 from typing import Optional, Dict, List
+import sys
 
 # Configure Streamlit page
 st.set_page_config(
@@ -133,7 +134,12 @@ def render_inventory_table():
     st.subheader("Inventory Status")
     
     if st.session_state.inventory_data:
-        df = pd.DataFrame(st.session_state.inventory_data)
+        # Ensure we have a proper DataFrame
+        try:
+            df = pd.DataFrame(st.session_state.inventory_data)
+        except Exception as e:
+            st.error(f"Error loading inventory data: {str(e)}")
+            return
         
         # Filter options
         col1, col2, col3 = st.columns(3)
@@ -151,38 +157,38 @@ def render_inventory_table():
         if category_filter != "All":
             filtered_df = filtered_df[filtered_df["category"] == category_filter]
         if search_term:
-            filtered_df = filtered_df[filtered_df["item"].str.contains(search_term, case=False, na=False)]
+            # Convert to string first to avoid pandas type issues
+            try:
+                # Ensure we have strings and filter safely
+                item_series = filtered_df["item"].astype(str)
+                mask = item_series.str.contains(search_term, case=False, na=False)
+                filtered_df = filtered_df[mask]
+            except Exception:
+                # Fallback if string operations fail
+                filtered_df = filtered_df
         
-        # Display table with status styling
+        # Display inventory data
         if len(filtered_df) > 0:
-            for idx, row in filtered_df.iterrows():
-                col1, col2, col3, col4, col5, col6 = st.columns([2, 1, 1, 1, 1, 1])
+            # Use native pandas display for Streamlit Cloud compatibility
+            st.dataframe(filtered_df, use_container_width=True)
+            
+            # Admin controls for status updates
+            if st.session_state.authenticated:
+                st.subheader("Admin Controls")
+                item_to_update = st.selectbox("Select item to update:", 
+                                              options=[(item["id"], item["item"]) for item in st.session_state.inventory_data],
+                                              format_func=lambda x: x[1])
                 
-                with col1:
-                    st.write(f"**{row['item']}**")
-                with col2:
-                    st.write(row.get('category', 'Unknown'))
-                with col3:
-                    status = str(row['status'])
-                    st.markdown(f'<span class="status-{status}">{status.upper()}</span>', unsafe_allow_html=True)
-                with col4:
-                    st.write(row.get('requestor', 'Unknown'))
-                with col5:
-                    st.write(row.get('date_requested', 'Unknown'))
-                with col6:
-                    if st.session_state.authenticated:
-                        status_options = ["missing", "complete", "verified", "returned"]
-                        current_index = status_options.index(status) if status in status_options else 0
-                        new_status = st.selectbox(f"Update", status_options, 
-                                                index=current_index, 
-                                                key=f"status_{row['id']}")
-                        if new_status != status:
-                            # Update status in session state
-                            for item in st.session_state.inventory_data:
-                                if item["id"] == row["id"]:
-                                    item["status"] = new_status
-                                    break
-                            st.success(f"Updated {row['item']} to {new_status}")
+                if item_to_update:
+                    current_item = next((item for item in st.session_state.inventory_data if item["id"] == item_to_update[0]), None)
+                    if current_item:
+                        new_status = st.selectbox("Update status:", 
+                                                  ["missing", "complete", "verified", "returned"],
+                                                  index=["missing", "complete", "verified", "returned"].index(current_item["status"]))
+                        
+                        if st.button("Update Status"):
+                            current_item["status"] = new_status
+                            st.success(f"Updated {current_item['item']} to {new_status}")
                             st.rerun()
         else:
             st.info("No items match the current filters")
@@ -335,17 +341,21 @@ def render_survey_dialog():
 
 def main():
     """Main application function"""
-    render_header()
-    
-    # Survey button in header area if enabled
-    if st.session_state.survey_enabled:
-        render_survey_dialog()
-    
-    # Authentication check for protected tabs
-    protected_tabs = ["Inventory Tracking", "Admin Panel", "Pending Requests"]
-    
-    # Main navigation tabs
-    tabs = st.tabs(["Request Items", "Inventory Tracking", "Admin Panel", "Pending Requests"])
+    try:
+        render_header()
+        
+        # Survey button in header area if enabled
+        if st.session_state.survey_enabled:
+            render_survey_dialog()
+        
+        # Authentication check for protected tabs
+        protected_tabs = ["Inventory Tracking", "Admin Panel", "Pending Requests"]
+        
+        # Main navigation tabs
+        tabs = st.tabs(["Request Items", "Inventory Tracking", "Admin Panel", "Pending Requests"])
+    except Exception as e:
+        st.error(f"Application error: {str(e)}")
+        st.stop()
     
     with tabs[0]:
         render_request_form()

@@ -1,0 +1,242 @@
+[     UTC     ] Logs for event-inventory.streamlit.app/
+
+────────────────────────────────────────────────────────────────────────────────────────
+
+[20:30:19] 🖥 Provisioning machine...
+
+[20:30:19] 🎛 Preparing system...
+
+[20:30:19] ⛓ Spinning up manager process...
+
+[20:30:22] 🚀 Starting up repository: 'event-inventory', branch: 'main', main module: 'streamlit_app.py'
+
+[20:30:22] 🐙 Cloning repository...
+
+[20:30:23] 🐙 Cloning into '/mount/src/event-inventory'...
+
+[20:30:23] 🐙 Cloned repository!
+
+[20:30:23] 🐙 Pulling code changes from Github...
+
+[20:30:23] 📦 Processing dependencies...
+
+Prepared [2025-08-14 20:30:26.868865] 68 packages in 2.78s
+
+Installed 68 packages in 137ms
+
+ + altair==5.5.0
+
+ + anyio==4.10.0
+
+ + attrs==25.3.0
+
+ + blinker==1.9.0
+
+ + cachecontrol==0.14.3
+
+ + cachetools==5.5.2
+
+ + certifi==2025.8.3
+
+ + cffi==1.17.1
+
+ + charset-normalizer==3.4.3
+
+ + click==8.2.1
+
+ + cryptography==45.0.6
+
+ + firebase-admin==7.1.0
+
+ [2025-08-14 20:30:26.999537] + gitdb==4.0.12
+
+ + gitpython==3.1.45
+
+ + google-api-core==2.25.1
+
+ + google-auth==2.40.3
+
+ + google-cloud-core==2.4.3
+
+ + google-cloud-firestore==2.21.0
+
+ + google-cloud-storage==3.3.0
+
+ + google-crc32c==1.7.1
+
+ + google-resumable-media==2.7.2
+
+ + googleapis-common-protos==1.70.0
+
+ + grpcio==1.74.0
+
+ + grpcio-status==1.74.0
+
+ + h11==0.16.0
+
+ + h2[2025-08-14 20:30:26.999758] ==4.2.0
+
+ + hpack==4.1.0
+
+ + httpcore==1.0.9
+
+ + httpx==0.28.1
+
+ + hyperframe==6.1.0
+
+ + idna==3.10
+
+ + jinja2==3.1.6
+
+ + jsonschema==4.25.0
+
+ + jsonschema-specifications==2025.4.1
+
+ + markupsafe==3.0.2
+
+ + msgpack==1.1.1
+
+ + narwhals==2.1.1
+
+ + numpy==2.3.2
+
+ + packaging==25.0
+
+ + pandas==2.3.1
+
+ + pillow[2025-08-14 20:30:27.000126] ==11.3.0
+
+ + proto-plus==1.26.1
+
+ + protobuf==6.31.1
+
+ + psycopg2-binary==2.9.10
+
+ + pyarrow==21.0.0
+
+ + pyasn1==0.6.1
+
+ + pyasn1-modules==0.4.2
+
+ + pycparser==2.22
+
+ + pydeck==0.9.1
+
+ + pyjwt==2.10.1
+
+ + [2025-08-14 20:30:27.000451] python-dateutil==2.9.0.post0
+
+ + python-dotenv==1.1.1
+
+ + pytz==2025.2
+
+ + referencing==0.36.2
+
+ + [2025-08-14 20:30:27.000567] requests==2.32.4
+
+ + rpds-py==0.27.0
+
+ + rsa==4.9.1
+
+ + six==1.17.0[2025-08-14 20:30:27.000677] 
+
+ + smmap==5.0.2
+
+ + sniffio==1.3.1
+
+ + streamlit==1.48.1[2025-08-14 20:30:27.000894] 
+
+ + tenacity==9.1.2
+
+ + toml==0.10.2
+
+ + tornado==6.5.2
+
+ + typing-extensions==4.14.1
+
+ + tzdata==[2025-08-14 20:30:27.001084] 2025.2
+
+ + urllib3==2.5.0
+
+ + watchdog==6.0.0
+
+[20:30:28] 🐍 Python dependencies were installed from /mount/src/event-inventory/uv.lock using uv-sync.
+
+[20:30:28] 📦 WARN: More than one requirements file detected in the repository. Available options: uv-sync /mount/src/event-inventory/uv.lock, poetry /mount/src/event-inventory/pyproject.toml. Used: uv-sync with /mount/src/event-inventory/uv.lock
+
+Check if streamlit is installed
+
+Streamlit is already installed
+
+[20:30:29] 📦 Processed dependencies!
+
+2025-08-14 20:30:31.503 Failed to schedule watch observer for path /mount/src/event-inventory/.streamlit
+
+Traceback (most recent call last):
+
+  File "/home/adminuser/venv/lib/python3.13/site-packages/streamlit/watcher/event_based_path_watcher.py", line 186, in watch_path
+
+    folder_handler.watch = self._observer.schedule(
+
+                           ~~~~~~~~~~~~~~~~~~~~~~~^
+
+        folder_handler, folder_path, recursive=True
+
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    )
+
+    ^
+
+  File "/home/adminuser/venv/lib/python3.13/site-packages/watchdog/observers/api.py", line 312, in schedule
+
+    emitter.start()
+
+    ~~~~~~~~~~~~~^^
+
+  File "/home/adminuser/venv/lib/python3.13/site-packages/watchdog/utils/__init__.py", line 75, in start
+
+    self.on_thread_start()
+
+    ~~~~~~~~~~~~~~~~~~~~^^
+
+  File "/home/adminuser/venv/lib/python3.13/site-packages/watchdog/observers/inotify.py", line 119, in on_thread_start
+
+    self._inotify = InotifyBuffer(path, recursive=self.watch.is_recursive, event_mask=event_mask)
+
+                    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  File "/home/adminuser/venv/lib/python3.13/site-packages/watchdog/observers/inotify_buffer.py", line 30, in __init__
+
+    self._inotify = Inotify(path, recursive=recursive, event_mask=event_mask)
+
+                    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  File "/home/adminuser/venv/lib/python3.13/site-packages/watchdog/observers/inotify_c.py", line 185, in __init__
+
+    self._add_dir_watch(path, event_mask, recursive=recursive)
+
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  File "/home/adminuser/venv/lib/python3.13/site-packages/watchdog/observers/inotify_c.py", line 404, in _add_dir_watch
+
+    self._add_watch(path, mask)
+
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^
+
+  File "/home/adminuser/venv/lib/python3.13/site-packages/watchdog/observers/inotify_c.py", line 424, in _add_watch
+
+    Inotify._raise_error()
+
+    ~~~~~~~~~~~~~~~~~~~~^^
+
+  File "/home/adminuser/venv/lib/python3.13/site-packages/watchdog/observers/inotify_c.py", line 435, in _raise_error
+
+    raise OSError(errno.ENOSPC, "inotify watch limit reached")
+
+OSError: [Errno 28] inotify watch limit reached
+
+
+
+
+[20:30:34] ❗️ The service has encountered an error while checking the health of the Streamlit app: Get "http://localhost:8501/healthz": dial tcp 127.0.0.1:8501: connect: connection refused
