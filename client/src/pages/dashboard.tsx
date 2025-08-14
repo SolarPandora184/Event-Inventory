@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { RequestForm } from "@/components/inventory/request-form";
 import { InventoryTable } from "@/components/inventory/inventory-table";
 import { MobileInventorySlider } from "@/components/inventory/mobile-inventory-slider";
@@ -8,9 +9,12 @@ import { AdminPanel } from "@/components/inventory/admin-panel";
 import { PendingRequests } from "@/components/inventory/pending-requests";
 import { PasswordPrompt } from "@/components/auth/password-prompt";
 import { CookieConsent } from "@/components/auth/cookie-consent";
+import { SurveyDialog } from "@/components/survey/survey-dialog";
 
 import { useAuth, useEventName } from "@/hooks/use-auth";
-import { Shield, Plus, Package, Settings, Clock, Smartphone, Monitor } from "lucide-react";
+import { database } from "@/lib/firebase";
+import { ref, onValue } from "firebase/database";
+import { Shield, Plus, Package, Settings, Clock, Smartphone, Monitor, ClipboardList } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
@@ -19,6 +23,8 @@ export default function Dashboard() {
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [pendingTab, setPendingTab] = useState<string | null>(null);
   const [useMobileView, setUseMobileView] = useState(false);
+  const [surveyEnabled, setSurveyEnabled] = useState(false);
+  const [showSurvey, setShowSurvey] = useState(false);
 
   const { isAuthenticated, showCookieConsent, authenticate, acceptCookies, declineCookies } = useAuth();
   const { eventName } = useEventName();
@@ -36,6 +42,16 @@ export default function Dashboard() {
     setShowPasswordPrompt(false);
     setPendingTab(null);
   };
+
+  useEffect(() => {
+    // Listen to survey settings
+    const surveyRef = ref(database, "surveySettings/enabled");
+    const unsubscribe = onValue(surveyRef, (snapshot) => {
+      setSurveyEnabled(snapshot.val() || false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleTabChange = (value: string) => {
     if (value !== "request" && !isAuthenticated) {
@@ -59,6 +75,9 @@ export default function Dashboard() {
         <CookieConsent onAccept={acceptCookies} onDecline={declineCookies} />
       )}
 
+      {/* Survey Dialog */}
+      <SurveyDialog isOpen={showSurvey} onClose={() => setShowSurvey(false)} />
+
       {/* Header */}
       <header className="bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -73,6 +92,16 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              {surveyEnabled && (
+                <Button
+                  onClick={() => setShowSurvey(true)}
+                  data-testid="button-survey"
+                  className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2"
+                >
+                  <ClipboardList className="mr-2 h-4 w-4" />
+                  Please take this quick survey
+                </Button>
+              )}
               <div className="hidden sm:flex items-center space-x-2 bg-secondary px-3 py-2 rounded-lg">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <span className="text-sm text-text-secondary">System Online</span>

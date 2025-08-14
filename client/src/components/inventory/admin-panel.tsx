@@ -114,42 +114,54 @@ export function AdminPanel() {
 
   const resetInventory = async () => {
     setIsResetting(true);
-    let backupData: any = null;
+    let backupInventoryData: any = null;
+    let backupSurveyData: any = null;
     
     try {
-      // Create a backup before deletion
-      const snapshot = await get(ref(database, "inventory"));
-      backupData = snapshot.val();
+      // Create backups before deletion
+      const inventorySnapshot = await get(ref(database, "inventory"));
+      const surveySnapshot = await get(ref(database, "surveys"));
+      backupInventoryData = inventorySnapshot.val();
+      backupSurveyData = surveySnapshot.val();
       
-      await remove(ref(database, "inventory"));
+      await Promise.all([
+        remove(ref(database, "inventory")),
+        remove(ref(database, "surveys"))
+      ]);
       
       toast({
-        title: "Inventory Reset",
-        description: "All inventory items have been deleted successfully.",
+        title: "Data Reset Complete",
+        description: "All inventory and survey data has been deleted successfully.",
         undoAction: async () => {
           try {
-            if (backupData) {
-              await set(ref(database, "inventory"), backupData);
-              toast({
-                title: "Inventory Restored",
-                description: "All inventory items have been restored successfully.",
-              });
+            const restorePromises = [];
+            if (backupInventoryData) {
+              restorePromises.push(set(ref(database, "inventory"), backupInventoryData));
             }
+            if (backupSurveyData) {
+              restorePromises.push(set(ref(database, "surveys"), backupSurveyData));
+            }
+            await Promise.all(restorePromises);
+            
+            toast({
+              title: "Data Restored",
+              description: "All inventory and survey data has been restored successfully.",
+            });
           } catch (error) {
-            console.error("Error restoring inventory:", error);
+            console.error("Error restoring data:", error);
             toast({
               title: "Error",
-              description: "Failed to restore inventory.",
+              description: "Failed to restore data.",
               variant: "destructive",
             });
           }
         },
       });
     } catch (error) {
-      console.error("Error resetting inventory:", error);
+      console.error("Error resetting data:", error);
       toast({
         title: "Error",
-        description: "Failed to reset inventory. Please try again.",
+        description: "Failed to reset data. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -218,6 +230,77 @@ export function AdminPanel() {
         variant: "destructive",
       });
       setEnteredPassword("");
+    }
+  };
+
+  const toggleSurvey = async () => {
+    try {
+      const newState = !surveyEnabled;
+      setSurveyEnabled(newState);
+      
+      // Save survey state to Firebase
+      await set(ref(database, "surveySettings/enabled"), newState);
+      
+      toast({
+        title: surveyEnabled ? "Survey Disabled" : "Survey Enabled",
+        description: surveyEnabled ? "Survey button removed from header" : "Survey button added to header",
+      });
+    } catch (error) {
+      console.error("Error toggling survey:", error);
+      toast({
+        title: "Error",
+        description: "Failed to toggle survey state.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const exportSurveyData = async () => {
+    try {
+      const snapshot = await get(ref(database, "surveys"));
+      const surveyData = snapshot.val();
+      
+      if (!surveyData) {
+        toast({
+          title: "No Survey Data",
+          description: "No survey responses found to export.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Convert to CSV format
+      const responses = Object.values(surveyData) as any[];
+      const csvHeaders = "Timestamp,User Type,Would Use Again,Prefer Over Excel,Glitches/Improvements\n";
+      const csvRows = responses.map(response => 
+        `"${new Date(response.timestamp).toLocaleString()}","${response.userType}","${response.wouldUseAgain}","${response.preferOverExcel}","${(response.feedback || '').replace(/"/g, '""')}"`
+      ).join('\n');
+      
+      const csvContent = csvHeaders + csvRows;
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      
+      if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `survey_responses_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
+      toast({
+        title: "Export Complete",
+        description: `Survey data exported successfully (${responses.length} responses).`,
+      });
+    } catch (error) {
+      console.error("Error exporting survey data:", error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to export survey data. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -330,6 +413,48 @@ export function AdminPanel() {
                 </DialogContent>
               </Dialog>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Survey Management */}
+      <Card className="bg-card border-border" data-testid="survey-management-card">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold text-text-primary flex items-center">
+            <ClipboardList className="mr-2 h-5 w-5" />
+            Survey Management
+          </CardTitle>
+          <CardDescription className="text-text-secondary">
+            Control survey display and export response data
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center space-x-3">
+                <Switch
+                  id="survey-toggle"
+                  checked={surveyEnabled}
+                  onCheckedChange={toggleSurvey}
+                  data-testid="switch-survey-toggle"
+                />
+                <Label htmlFor="survey-toggle" className="text-sm font-medium text-text-primary">
+                  Enable Survey Button
+                </Label>
+              </div>
+              <p className="text-xs text-text-muted">
+                When enabled, a survey button will appear in the header for all users
+              </p>
+            </div>
+            <Button
+              onClick={exportSurveyData}
+              variant="outline"
+              data-testid="button-export-survey"
+              className="border-blue-500 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950"
+            >
+              <Save className="mr-2 h-4 w-4" />
+              Export Survey Data
+            </Button>
           </div>
         </CardContent>
       </Card>
