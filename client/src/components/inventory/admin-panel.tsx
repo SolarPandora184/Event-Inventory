@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useEventName } from "@/hooks/use-auth";
 import { database } from "@/lib/firebase";
@@ -31,6 +32,8 @@ export function AdminPanel() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [tempEventName, setTempEventName] = useState("");
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [enteredPassword, setEnteredPassword] = useState("");
   const { toast } = useToast();
   const { eventName, updateEventName } = useEventName();
 
@@ -106,10 +109,6 @@ export function AdminPanel() {
   };
 
   const resetInventory = async () => {
-    if (!confirm("⚠️ This will permanently delete all inventory items. Continue?")) {
-      return;
-    }
-
     setIsResetting(true);
     let backupData: any = null;
     
@@ -151,6 +150,21 @@ export function AdminPanel() {
       });
     } finally {
       setIsResetting(false);
+      setShowPasswordDialog(false);
+      setEnteredPassword("");
+    }
+  };
+
+  const handlePasswordSubmit = () => {
+    if (enteredPassword === "Ku2023!@") {
+      resetInventory();
+    } else {
+      toast({
+        title: "Access Denied",
+        description: "Incorrect master password.",
+        variant: "destructive",
+      });
+      setEnteredPassword("");
     }
   };
 
@@ -433,17 +447,62 @@ export function AdminPanel() {
 
             <div className="flex items-center justify-between pt-6">
               <div className="flex gap-3">
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={resetInventory}
-                  disabled={isResetting}
-                  data-testid="button-reset-inventory"
-                  className="bg-red-600 hover:bg-red-700 text-white"
-                >
-                  <Trash className="mr-2 h-4 w-4" />
-                  ⚠️ Reset All Inventory
-                </Button>
+                <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+                  <DialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      disabled={isResetting}
+                      data-testid="button-reset-inventory"
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      <Trash className="mr-2 h-4 w-4" />
+                      ⚠️ Reset All Inventory
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent data-testid="dialog-password-prompt">
+                    <DialogHeader>
+                      <DialogTitle className="text-red-600">Master Password Required</DialogTitle>
+                      <DialogDescription>
+                        This action will permanently delete all inventory items. Enter the master password to continue.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <Label htmlFor="master-password">Master Password</Label>
+                      <Input
+                        id="master-password"
+                        type="password"
+                        value={enteredPassword}
+                        onChange={(e) => setEnteredPassword(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handlePasswordSubmit()}
+                        data-testid="input-master-password"
+                        placeholder="Enter master password"
+                        className="w-full"
+                      />
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setShowPasswordDialog(false);
+                          setEnteredPassword("");
+                        }}
+                        data-testid="button-cancel-reset"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={handlePasswordSubmit}
+                        disabled={!enteredPassword}
+                        data-testid="button-confirm-reset"
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        Reset Inventory
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
                 <Button
                   type="button"
                   variant="outline"

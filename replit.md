@@ -21,6 +21,12 @@ Preferred communication style: Simple, everyday language.
 - **Simplified Documentation**: Condensed deployment guide to essential steps only
 - **Cleaner Setup**: Removed unnecessary complexity while maintaining functionality
 
+## Test Functionality & Security Enhancements
+- **Test Button Added**: Implemented "Add 10 Test Items" button for testing toast notification system
+- **Realistic Test Data**: Button generates 10 realistic military equipment entries with random data
+- **Master Password Protection**: Added security dialog for reset inventory function with password "Ku2023!@"
+- **Enhanced Security**: Reset button now requires master password confirmation before allowing destructive operations
+
 # System Architecture
 
 ## Frontend Architecture
