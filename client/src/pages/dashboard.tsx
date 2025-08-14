@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RequestForm } from "@/components/inventory/request-form";
 import { InventoryTable } from "@/components/inventory/inventory-table";
+import { MobileInventorySlider } from "@/components/inventory/mobile-inventory-slider";
 import { AdminPanel } from "@/components/inventory/admin-panel";
 import { PendingRequests } from "@/components/inventory/pending-requests";
 import { PasswordPrompt } from "@/components/auth/password-prompt";
@@ -130,7 +131,12 @@ export default function Dashboard() {
           </TabsContent>
 
           <TabsContent value="inventory" data-testid="tab-content-inventory">
-            <InventoryTable />
+            <div className="block sm:hidden">
+              <MobileInventorySlider />
+            </div>
+            <div className="hidden sm:block">
+              <InventoryTable />
+            </div>
           </TabsContent>
 
           <TabsContent value="admin" data-testid="tab-content-admin">
