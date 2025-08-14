@@ -49,11 +49,20 @@ export function AdminPanel() {
   useEffect(() => {
     // Load password requirement setting
     const passwordRef = ref(database, "settings/passwordRequired");
-    const unsubscribe = onValue(passwordRef, (snapshot) => {
+    const unsubscribePassword = onValue(passwordRef, (snapshot) => {
       setPasswordRequired(snapshot.val() ?? true);
     });
 
-    return () => unsubscribe();
+    // Load survey enabled setting
+    const surveyRef = ref(database, "surveySettings/enabled");
+    const unsubscribeSurvey = onValue(surveyRef, (snapshot) => {
+      setSurveyEnabled(snapshot.val() || false);
+    });
+
+    return () => {
+      unsubscribePassword();
+      unsubscribeSurvey();
+    };
   }, []);
 
   const form = useForm<AdminFormData>({
@@ -400,75 +409,7 @@ export function AdminPanel() {
                 <Save className="mr-2 h-4 w-4" />
                 Save Event Name
               </Button>
-              <Dialog open={showEventPasswordDialog} onOpenChange={setShowEventPasswordDialog}>
-                <DialogTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    data-testid="button-change-event-password"
-                    className="border-blue-500 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950 mt-6"
-                  >
-                    <Save className="mr-2 h-4 w-4" />
-                    Change Event Password
-                  </Button>
-                </DialogTrigger>
-                <DialogContent data-testid="dialog-event-password-prompt">
-                  <DialogHeader>
-                    <DialogTitle className="text-blue-600">Change Event Password</DialogTitle>
-                    <DialogDescription>
-                      Enter the master password and new event password.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="master-password-event">Master Password</Label>
-                      <Input
-                        id="master-password-event"
-                        type="password"
-                        value={enteredPassword}
-                        onChange={(e) => setEnteredPassword(e.target.value)}
-                        data-testid="input-master-password-event"
-                        placeholder="Enter master password"
-                        className="w-full"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="new-event-password">New Event Password</Label>
-                      <Input
-                        id="new-event-password"
-                        type="password"
-                        value={newEventPassword}
-                        onChange={(e) => setNewEventPassword(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleEventPasswordSubmit()}
-                        data-testid="input-new-event-password"
-                        placeholder="Enter new event password"
-                        className="w-full"
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setShowEventPasswordDialog(false);
-                        setEnteredPassword("");
-                        setNewEventPassword("");
-                      }}
-                      data-testid="button-cancel-event-password"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleEventPasswordSubmit}
-                      disabled={!enteredPassword || !newEventPassword}
-                      data-testid="button-confirm-event-password"
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      Change Password
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+
             </div>
           </div>
         </CardContent>
@@ -512,6 +453,7 @@ export function AdminPanel() {
                 >
                   <Save className="mr-2 h-4 w-4" />
                   Export Survey Data
+                  <span className="ml-2 text-xs text-orange-600">*</span>
                 </Button>
               </DialogTrigger>
               <DialogContent data-testid="dialog-export-password">
@@ -584,11 +526,84 @@ export function AdminPanel() {
                 <Label htmlFor="password-toggle" className="text-sm font-medium text-text-primary">
                   Require Event Password
                 </Label>
+                <span className="text-xs text-orange-600 bg-orange-100 dark:bg-orange-900 px-2 py-1 rounded">
+                  Master password required
+                </span>
               </div>
               <p className="text-xs text-text-muted">
                 When enabled, users must enter event password to access protected tabs
               </p>
             </div>
+            <Dialog open={showEventPasswordDialog} onOpenChange={setShowEventPasswordDialog}>
+              <DialogTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  data-testid="button-change-event-password"
+                  className="border-blue-500 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950"
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  Change Event Password
+                  <span className="ml-2 text-xs text-orange-600">*</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent data-testid="dialog-event-password-prompt">
+                <DialogHeader>
+                  <DialogTitle className="text-blue-600">Change Event Password</DialogTitle>
+                  <DialogDescription>
+                    Enter the master password and new event password.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="master-password-event">Master Password</Label>
+                    <Input
+                      id="master-password-event"
+                      type="password"
+                      value={enteredPassword}
+                      onChange={(e) => setEnteredPassword(e.target.value)}
+                      data-testid="input-master-password-event"
+                      placeholder="Enter master password"
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="new-event-password">New Event Password</Label>
+                    <Input
+                      id="new-event-password"
+                      type="password"
+                      value={newEventPassword}
+                      onChange={(e) => setNewEventPassword(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleEventPasswordSubmit()}
+                      data-testid="input-new-event-password"
+                      placeholder="Enter new event password"
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowEventPasswordDialog(false);
+                      setEnteredPassword("");
+                      setNewEventPassword("");
+                    }}
+                    data-testid="button-cancel-event-password"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleEventPasswordSubmit}
+                    disabled={!enteredPassword || !newEventPassword}
+                    data-testid="button-confirm-event-password"
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    Change Password
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardContent>
       </Card>
@@ -637,6 +652,10 @@ export function AdminPanel() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <div className="text-xs text-orange-600 bg-orange-50 dark:bg-orange-950/30 p-3 rounded-md border border-orange-200 dark:border-orange-800">
+        <span className="font-medium">* Master Password Required:</span> These actions require entering the master password "Ku2023!@" for security protection.
+      </div>
 
       <Card className="bg-card border-border" data-testid="admin-panel-card">
         <CardHeader>
@@ -799,6 +818,7 @@ export function AdminPanel() {
                     >
                       <Trash className="mr-2 h-4 w-4" />
                       ⚠️ Reset All Inventory
+                      <span className="ml-2 text-xs text-orange-200">*</span>
                     </Button>
                   </DialogTrigger>
                   <DialogContent data-testid="dialog-password-prompt">
