@@ -1,9 +1,10 @@
-modules = ["nodejs-20", "web", "bash"]
+modules = ["nodejs-20", "web", "bash", "python-3.11"]
 run = "npm run dev"
 hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-25_05"
+packages = ["glibcLocales"]
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -13,6 +14,10 @@ build = ["npm", "run", "build"]
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 8501
+externalPort = 3000
 
 [env]
 PORT = "5000"
