@@ -531,7 +531,12 @@ export function InventoryTable() {
                 <TableRow
                   key={key}
                   data-testid={`inventory-row-${key}`}
-                  className="border-border hover:bg-secondary/50 transition-colors"
+                  className={`border-border transition-colors ${
+                    getItemStatus(item) === 'returned' ? 'bg-green-950/20 hover:bg-green-950/30 border-green-600/30' :
+                    getItemStatus(item) === 'verified' ? 'bg-blue-950/20 hover:bg-blue-950/30 border-blue-600/30' :
+                    getItemStatus(item) === 'complete' ? 'bg-emerald-950/20 hover:bg-emerald-950/30 border-emerald-600/30' :
+                    'bg-red-950/20 hover:bg-red-950/30 border-red-600/30'
+                  }`}
                 >
                   <TableCell className="text-text-primary font-medium">
                     {item.itemName}

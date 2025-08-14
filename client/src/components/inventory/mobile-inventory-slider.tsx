@@ -443,7 +443,12 @@ export function MobileInventorySlider() {
 
       <CardContent className="space-y-4">
         {/* Item Details Card */}
-        <div className="bg-secondary/30 rounded-lg p-4 space-y-3">
+        <div className={`rounded-lg p-4 space-y-3 border-2 ${
+          status === 'returned' ? 'bg-green-950/30 border-green-600/50' :
+          status === 'verified' ? 'bg-blue-950/30 border-blue-600/50' :
+          status === 'complete' ? 'bg-emerald-950/30 border-emerald-600/50' :
+          'bg-red-950/30 border-red-600/50'
+        }`}>
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-text-primary">{item.itemName}</h3>
             {getStatusBadge(status)}
