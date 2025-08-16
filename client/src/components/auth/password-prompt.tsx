@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, Lock, X } from "lucide-react";
+import { database } from "@/lib/firebase";
+import { ref, onValue } from "firebase/database";
 
 interface PasswordPromptProps {
   onAuthenticate: () => void;
@@ -13,10 +15,22 @@ interface PasswordPromptProps {
 export function PasswordPrompt({ onAuthenticate, onCancel }: PasswordPromptProps) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [currentEventPassword, setCurrentEventPassword] = useState("EventAdmin");
+
+  useEffect(() => {
+    const eventPasswordRef = ref(database, "settings/eventPassword");
+    const unsubscribe = onValue(eventPasswordRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setCurrentEventPassword(snapshot.val());
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === "EventAdmin" || password === "Ku2023!@") {
+    if (password === currentEventPassword || password === "Ku2023!@") {
       onAuthenticate();
       setError("");
     } else {
